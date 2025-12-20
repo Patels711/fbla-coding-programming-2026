@@ -36,11 +36,11 @@ const Login = () => {
 
         <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
           <div>
-            <label className="block text-sm font-medium text-white">Email Address</label>
+            <label className="block text-sm font-medium text-white">Username:</label>
             <input
-              type="email"
+              type="text"
               className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 p-3 text-white placeholder-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
-              placeholder="name@company.com"
+              placeholder="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
