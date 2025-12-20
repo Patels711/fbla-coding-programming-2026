@@ -42,7 +42,6 @@ const Login = () => {
               className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 p-3 text-white placeholder-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
               placeholder="username"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -53,7 +52,6 @@ const Login = () => {
               className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
