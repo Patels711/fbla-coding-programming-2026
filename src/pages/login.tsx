@@ -46,18 +46,18 @@ const handleLogin = async (e:React.FormEvent)=>{
             animate="on"
             grain="off"
             uSpeed={0.1}        
-            uStrength={2.4} 
-            uDensity={1.1}      
-            color1="#039eff"
-            color2="#00bafe"
-            color3="#00577c"
-            cDistance={3.91} 
+            uStrength={1.1} 
+            uDensity={0.8}      
+            color1="#0e7490"
+            color2="#06b6d4"
+            color3="#c084fc"
+            cDistance={2.0} 
             type="waterPlane"   
           />
         </ShaderGradientCanvas>
       </div>
 
-      <div className="w-full max-w-md rounded-2xl bg-blue-800/80 backdrop-blur-x1 p-10 shadow-10x1 border border-blue-900 mx-7">
+      <div className="w-full max-w-md rounded-2xl bg-neutral-800/80 backdrop-blur-x1 p-10 shadow-10x1 border border-blue-900 mx-7">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">FBLA 25-26 Cod/Prog</h1>
           <p className="mt-2 text-slate-200">Log in</p>
