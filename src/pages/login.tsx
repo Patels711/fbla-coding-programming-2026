@@ -47,8 +47,7 @@ const handleLogin = async (e:React.FormEvent)=>{
             grain="off"
             uSpeed={0.1}        
             uStrength={1.1} 
-            uDensity={0.8}      
-            color1="#0e7490"
+            uDensity={0.8} 
             color2="#06b6d4"
             color3="#c084fc"
             cDistance={2.0} 
