@@ -20,7 +20,7 @@ const Landing =()=>{
                     Welcome
                 </h1>
                 <motion.div animate={{opacity:[0.2, 1.1, 0.2]}} transition={{duration:2.5, repeat:Infinity, ease:"easeInOut"}}>
-                    <h1 className="text-s font-sans tracking-tighter lg:text-xl font-thin italic text-cyan-300">
+                    <h1 className="text-s font-serif tracking-tighter lg:text-xl font-thin italic text-cyan-300">
                         Click the Button to proceed
                     </h1>
                 </motion.div>
