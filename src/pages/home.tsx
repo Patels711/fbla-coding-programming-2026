@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import {motion} from 'framer-motion';
+import {easeInOut, motion} from 'framer-motion';
   
 const Home=()=>{
     return(
