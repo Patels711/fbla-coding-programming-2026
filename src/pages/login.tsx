@@ -51,7 +51,7 @@ const handleLogin = async (e:React.FormEvent)=>{
             color2="#06b6d4"
             color3="#c084fc"
             cDistance={2.0} 
-            type="waterPlane"   
+            type="waterPlane"
           />
         </ShaderGradientCanvas>
       </div>
