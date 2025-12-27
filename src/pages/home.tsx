@@ -56,7 +56,7 @@ const Home=()=>{
             </div>
             <div className="relative z-10 flex flex-col items-center gap-8 pt-20 pb-15">
                 <div className="bg-neutral-800/60 p-16 rounded-3xl w-full max-w-2xl border border-white/5 backdrop-blur-sm">
-                    <h1 className="text-neutral-500 text-4xl">Content 05</h1>
+                    <h1 className="text-purple-400/60 text-4xl">Content 05</h1>
                 </div> 
             </div>
             <div className="relative z-10 flex flex-col border-neutral-800 border-y-2 items-center gap-8 my-9 py-15 bg-neutral-900 min-w-full">
