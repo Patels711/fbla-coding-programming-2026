@@ -1,5 +1,4 @@
 import { useState } from 'react';
-// Corrected import: you need both the Canvas and the Gradient
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
 import { Link } from 'react-router-dom';
 
