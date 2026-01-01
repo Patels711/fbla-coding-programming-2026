@@ -28,12 +28,21 @@ const Home=()=>{
                         >
                             ← Back
                         </Link>
-                        <span className="bg-gradient-to-l from-cyan-700 via-cyan-500 to-purple-400 bg-clip-text text-transparent font-bold tracking-widest text-sm md:text-lg">
+                        <span  className="bg-gradient-to-l from-cyan-700 via-cyan-500 to-purple-400 bg-clip-text text-transparent font-bold tracking-widest text-sm md:text-lg">
                             FBLA Project 25-26
                         </span>
-                        <Link to="/Login" className="pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md">
-                            Sign In →
-                        </Link>
+                        <div className="flex space-x-2">
+                            <Link to="/Login"  className="pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md mr-2 ">
+                                Login →
+                            </Link>
+                            <Link to="/Register" className="pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md">
+                                Register →
+                            </Link>
+
+
+                        </div>
+                        
+                        
                     </nav>
                 </motion.div>
             </div>
