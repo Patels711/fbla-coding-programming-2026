@@ -58,7 +58,7 @@ const handleLogin = async (e:React.FormEvent)=>{
       <div className="w-full max-w-md rounded-2xl bg-neutral-800/80 backdrop-blur-x1 p-10 shadow-10x1 border border-blue-900 mx-7">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">FBLA 25-26 Cod/Prog</h1>
-          <p className="mt-2 text-slate-200">Log in</p>
+          <p className="mt-2 text-slate-200">Login</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -87,7 +87,7 @@ const handleLogin = async (e:React.FormEvent)=>{
           <button
             type="submit"
             
-            className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg"
+            className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg mb-3"
           >
             Sign In
           </button>
