@@ -6,17 +6,17 @@ import Map from "./pages/map";
 import Register from "./pages/register";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />}/>
-        <Route path="/register" element={<Register />}/>
-        <Route path="/" element={<Landing />}/>
-        <Route path="/Home" element={<Home />}/>
-        <Route path="/App" element={<Map />}/>
-      </Routes>
-    </BrowserRouter>
-  );
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/login" element={<Login />} />
+				<Route path="/register" element={<Register />} />
+				<Route path="/" element={<Landing />} />
+				<Route path="/home" element={<Home />} />
+				<Route path="/app" element={<Map />} />
+			</Routes>
+		</BrowserRouter>
+	);
 }
 
 export default App
