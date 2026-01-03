@@ -3,7 +3,7 @@ import tt from '@tomtom-international/web-sdk-maps';
 import { services } from '@tomtom-international/web-sdk-services';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 
-const API_KEY = 'VbTypyNZ9wZYjIgwi9Wlyxd84cZTlPED';
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 const POI_CATEGORIES = {
   GAS_STATIONS: '7311',
@@ -230,12 +230,14 @@ const App = () => {
     return () => clearTimeout(timer);
   }, [inputValue, userLoc]);
 
-  const clearMap = () => {
+  const clearMap = (preservePoi = false) => {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
-    poiMarkers.forEach(m => m.remove());
-    setPoiMarkers([]);
-    
+    if (!preservePoi) {
+      poiMarkers.forEach(m => m.remove());
+      setPoiMarkers([]);
+    }
+
     // Remove layers first, then source (to avoid "source in use" errors)
     if (mapRef.current && mapRef.current.getLayer('route-arrows')) {
       try { mapRef.current.removeLayer('route-arrows'); } catch (e) {}
@@ -372,6 +374,7 @@ const App = () => {
       setPoiMarkers(newMarkers);
 
       if (newMarkers.length > 0 && mapRef.current) {
+        mapRef.current.setZoom(10);
         mapRef.current.fitBounds(bounds, { padding: 50 });
       }
     } catch (e) {
@@ -911,20 +914,21 @@ const App = () => {
         </button>
         <button
           onClick={() => {
-            setMapStyle(prev => prev === 'regular' ? 'satellite' : 'regular');
+            setMapStyle(prev => {
+              const styles = ['regular', 'satellite', 'dark', 'hybrid'];
+              const currentIndex = styles.indexOf(prev);
+              const nextIndex = (currentIndex + 1) % styles.length;
+              return styles[nextIndex] as 'regular' | 'satellite' | 'dark' | 'hybrid';
+            });
           }}
-          className={mapStyle === 'satellite' ? 'on' : ''}
+          className={mapStyle !== 'regular' ? 'on' : ''}
           title={`Current: ${mapStyle}`}
         >
           <span className="btn-label">{mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}</span>
         </button>
       </div>
 
-      {/* Map Style Indicator */}
-      <div className="style-indicator">
-        {mapPerspective === '3d' && <span>3D</span>}
-        {mapStyle !== 'regular' && <span className="style-name">{mapStyle.toUpperCase()}</span>}
-      </div>
+
 
       <style>{`
         .ui-overlay { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
