@@ -6,50 +6,107 @@ import '@tomtom-international/web-sdk-maps/dist/maps.css';
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 const POI_CATEGORIES = {
-  GAS_STATIONS: '7311',
-  BANKS: '7321',
-  PARKS: '9362',
-  RESTAURANTS: '7315'
+	GAS_STATIONS: '7311',
+	BANKS: '7321',
+	PARKS: '9362',
+	RESTAURANTS: '7315'
 };
 
-const getLng = (pos: any): number | undefined => {
-  if (!pos) return undefined;
-  if (typeof pos.lng === 'number') return pos.lng;
-  if (typeof pos.lon === 'number') return pos.lon;
-  return undefined;
-};
+interface Position {
+	lng: number;
+	lat: number;
+}
 
-const getLat = (pos: any): number | undefined => {
-  if (!pos) return undefined;
-  if (typeof pos.lat === 'number') return pos.lat;
-  return undefined;
-};
-
-const hasValidPosition = (pos: any): boolean => {
-  const lng = getLng(pos);
-  const lat = getLat(pos);
-  return lng !== undefined && lat !== undefined && 
-         !isNaN(lng) && !isNaN(lat);
-};
+interface SearchResult {
+	id: string;
+	dist?: number;
+	info?: string;
+	poi?: {
+		name: string;
+		categories?: string[];
+		classifications?: { code: string; name: string }[];
+	};
+	address?: {
+		freeformAddress: string;
+		municipality?: string;
+		streetName?: string;
+	}
+	position: Position;
+}
 
 interface RouteInstruction {
-  maneuverType: string;
-  streetName: string;
-  message: string;
-  distance: number;
-  time: number;
-  point: { lng: number; lat: number };
+	maneuverType: string;
+	streetName: string;
+	message: string;
+	distance: number;
+	time: number;
+	point: Position;
 }
 
 interface RouteInfo {
-  name: string;
-  lat: number;
-  lng: number;
-  miles: string;
-  mins: number;
-  instructions: RouteInstruction[];
-  currentInstruction: number;
+	name: string;
+	lat: number;
+	lng: number;
+	miles: string;
+	mins: number;
+	instructions: RouteInstruction[];
+	currentInstruction: number;
 }
+
+interface LocationDetails {
+	lat: number;
+	lng: number;
+	address: string;
+	imageUrl: string;
+}
+
+interface TomTomGuidanceInstruction {
+	message?: string;
+	text?: string;
+	streetName?: string;
+	maneuverType?: string;
+	distance?: number;
+	travelTimeInSeconds?: number;
+	point?: Position;
+	position?: Position | [number, number];
+	coords?: Position | [number, number];
+}
+
+interface TomTomGuidanceGroup {
+	groupedInstructions?: TomTomGuidanceInstruction[];
+	firstInstructionMessage?: string;
+	lastInstructionMessage?: string;
+	maneuverType?: string;
+	distance?: number;
+	travelTimeInSeconds?: number;
+}
+
+interface TomTomRouteResponse {
+	toGeoJson: () => any;
+	guidance?: {
+		instructions?: TomTomGuidanceInstruction[];
+		instructionGroups?: TomTomGuidanceGroup[];
+	};
+}
+
+const getLng = (pos: Position): number | undefined => {
+	if (!pos) return undefined;
+	if (typeof pos.lng === 'number') return pos.lng;
+	return undefined;
+};
+
+const getLat = (pos: Position): number | undefined => {
+	if (!pos) return undefined;
+	if (typeof pos.lat === 'number') return pos.lat;
+	return undefined;
+};
+
+const hasValidPosition = (pos: Position): boolean => {
+	const lng = getLng(pos);
+	const lat = getLat(pos);
+	return lng !== undefined && lat !== undefined &&
+		!isNaN(lng) && !isNaN(lat);
+};
 
 const App = () => {
   const mapElement = useRef<HTMLDivElement>(null);
@@ -1152,8 +1209,8 @@ const App = () => {
 
         .tt-attribution { display: none !important; }
       `}</style>
-    </div>
-  );
+		</div>
+	);
 };
 
 export default App;
