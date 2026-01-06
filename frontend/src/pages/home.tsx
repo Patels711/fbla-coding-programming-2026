@@ -77,6 +77,16 @@ const Home = () => {
 					<h1 className="text-neutral-500 text-4xl">Content 08</h1>
 				</div>
 			</div>
+			
+			{/* Map Navigation Button */}
+			<div className="relative z-10 flex flex-col items-center gap-8 pt-20 pb-20">
+				<Link 
+					to="/app" 
+					className="px-8 py-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-lg hover:shadow-cyan-500/50 transition-all duration-200 hover:scale-105"
+				>
+					🗺️ Open Map
+				</Link>
+			</div>
 		</div>
 	);
 };

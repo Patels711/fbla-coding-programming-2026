@@ -3,110 +3,54 @@ import tt from '@tomtom-international/web-sdk-maps';
 import { services } from '@tomtom-international/web-sdk-services';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+
+const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
 
 const POI_CATEGORIES = {
-	GAS_STATIONS: '7311',
-	BANKS: '7321',
-	PARKS: '9362',
-	RESTAURANTS: '7315'
+  GAS_STATIONS: '7311',
+  BANKS: '7321',
+  PARKS: '9362',
+  RESTAURANTS: '7315'
 };
 
-interface Position {
-	lng: number;
-	lat: number;
-}
+const getLng = (pos: any): number | undefined => {
+  if (!pos) return undefined;
+  if (typeof pos.lng === 'number') return pos.lng;
+  if (typeof pos.lon === 'number') return pos.lon;
+  return undefined;
+};
 
-interface SearchResult {
-	id: string;
-	dist?: number;
-	info?: string;
-	poi?: {
-		name: string;
-		categories?: string[];
-		classifications?: { code: string; name: string }[];
-	};
-	address?: {
-		freeformAddress: string;
-		municipality?: string;
-		streetName?: string;
-	}
-	position: Position;
-}
+const getLat = (pos: any): number | undefined => {
+  if (!pos) return undefined;
+  if (typeof pos.lat === 'number') return pos.lat;
+  return undefined;
+};
+
+const hasValidPosition = (pos: any): boolean => {
+  const lng = getLng(pos);
+  const lat = getLat(pos);
+  return lng !== undefined && lat !== undefined && 
+         !isNaN(lng) && !isNaN(lat);
+};
 
 interface RouteInstruction {
-	maneuverType: string;
-	streetName: string;
-	message: string;
-	distance: number;
-	time: number;
-	point: Position;
+  maneuverType: string;
+  streetName: string;
+  message: string;
+  distance: number;
+  time: number;
+  point: { lng: number; lat: number };
 }
 
 interface RouteInfo {
-	name: string;
-	lat: number;
-	lng: number;
-	miles: string;
-	mins: number;
-	instructions: RouteInstruction[];
-	currentInstruction: number;
+  name: string;
+  lat: number;
+  lng: number;
+  miles: string;
+  mins: number;
+  instructions: RouteInstruction[];
+  currentInstruction: number;
 }
-
-interface LocationDetails {
-	lat: number;
-	lng: number;
-	address: string;
-	imageUrl: string;
-}
-
-interface TomTomGuidanceInstruction {
-	message?: string;
-	text?: string;
-	streetName?: string;
-	maneuverType?: string;
-	distance?: number;
-	travelTimeInSeconds?: number;
-	point?: Position;
-	position?: Position | [number, number];
-	coords?: Position | [number, number];
-}
-
-interface TomTomGuidanceGroup {
-	groupedInstructions?: TomTomGuidanceInstruction[];
-	firstInstructionMessage?: string;
-	lastInstructionMessage?: string;
-	maneuverType?: string;
-	distance?: number;
-	travelTimeInSeconds?: number;
-}
-
-interface TomTomRouteResponse {
-	toGeoJson: () => any;
-	guidance?: {
-		instructions?: TomTomGuidanceInstruction[];
-		instructionGroups?: TomTomGuidanceGroup[];
-	};
-}
-
-const getLng = (pos: Position): number | undefined => {
-	if (!pos) return undefined;
-	if (typeof pos.lng === 'number') return pos.lng;
-	return undefined;
-};
-
-const getLat = (pos: Position): number | undefined => {
-	if (!pos) return undefined;
-	if (typeof pos.lat === 'number') return pos.lat;
-	return undefined;
-};
-
-const hasValidPosition = (pos: Position): boolean => {
-	const lng = getLng(pos);
-	const lat = getLat(pos);
-	return lng !== undefined && lat !== undefined &&
-		!isNaN(lng) && !isNaN(lat);
-};
 
 const App = () => {
   const mapElement = useRef<HTMLDivElement>(null);
@@ -127,6 +71,7 @@ const App = () => {
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string, imageUrl: string} | null>(null);
   const [mapStyle, setMapStyle] = useState<'regular' | 'satellite' | 'dark' | 'hybrid'>('regular');
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
+  const [mapError, setMapError] = useState<string | null>(null);
 
 
   const getMapStyle = () => {
@@ -144,68 +89,89 @@ const App = () => {
 
   useEffect(() => {
     if (!mapElement.current) return;
+    if (!API_KEY) {
+      setMapError('API key is missing. Please set VITE_TOMTOM_API_KEY in your .env file.');
+      return;
+    }
 
     const style = getMapStyle();
 
-    const map = tt.map({
-      key: API_KEY,
-      container: mapElement.current,
-      center: [userLoc.lng, userLoc.lat],
-      zoom: 13,
-      pitch: mapPerspective === '3d' ? 60 : 0,
-      style: {
-        map: style.map as any,
-        poi: style.poi as any,
-        trafficIncidents: 'incidents_day' as any,
-        trafficFlow: 'flow_relative0' as any
-      }
-    });
-
-    map.on('load', () => {
-      setMapLoaded(true);
-      drawUserMarker(userLoc);
-
-      // Add click handler for map locations
-      map.on('click', async (e: any) => {
-        const lngLat = e.lngLat;
-        const lat = lngLat.lat;
-        const lng = lngLat.lng;
-
-        try {
-          // Reverse geocode to get address
-          const reverseGeocode = await services.reverseGeocode({
-            key: API_KEY,
-            position: [lng, lat]
-          });
-
-          const address = reverseGeocode.addresses?.[0]?.address?.freeformAddress || 'Unknown Location';
-
-          // Get static map image using TomTom's Map Display API for static images
-          const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&style=main&center=${lng},${lat}&zoom=16&width=400&height=200&format=png`;
-
-          setSelectedLocation({ lat, lng, address, imageUrl });
-        } catch (error) {
-          console.error('Error fetching location details:', error);
-          // Fallback to simple static map
-          const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&center=${lng},${lat}&zoom=15&width=400&height=200&format=png`;
-          setSelectedLocation({ lat, lng, address: 'Unknown Location', imageUrl });
+    try {
+      const map = tt.map({
+        key: API_KEY,
+        container: mapElement.current,
+        center: [userLoc.lng, userLoc.lat],
+        zoom: 13,
+        pitch: mapPerspective === '3d' ? 60 : 0,
+        style: {
+          map: style.map as any,
+          poi: style.poi as any,
+          trafficIncidents: 'incidents_day' as any,
+          trafficFlow: 'flow_relative0' as any
         }
       });
-    });
 
-    mapRef.current = map;
+      map.on('load', () => {
+        console.log('Map loaded successfully');
+        setMapLoaded(true);
+        setMapError(null);
+        drawUserMarker(userLoc);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserLoc(coords);
-        map.setCenter([coords.lng, coords.lat]);
-      }, (err) => {
-        console.log('Geolocation error:', err);
+        // Add click handler for map locations
+        map.on('click', async (e: any) => {
+          const lngLat = e.lngLat;
+          const lat = lngLat.lat;
+          const lng = lngLat.lng;
+
+          try {
+            // Reverse geocode to get address
+            const reverseGeocode = await services.reverseGeocode({
+              key: API_KEY,
+              position: [lng, lat]
+            });
+
+            const address = reverseGeocode.addresses?.[0]?.address?.freeformAddress || 'Unknown Location';
+
+            // Get static map image using TomTom's Map Display API for static images
+            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&style=main&center=${lng},${lat}&zoom=16&width=400&height=200&format=png`;
+
+            setSelectedLocation({ lat, lng, address, imageUrl });
+          } catch (error) {
+            console.error('Error fetching location details:', error);
+            // Fallback to simple static map
+            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&center=${lng},${lat}&zoom=15&width=400&height=200&format=png`;
+            setSelectedLocation({ lat, lng, address: 'Unknown Location', imageUrl });
+          }
+        });
       });
+
+      map.on('error', (e: any) => {
+        console.error('Map error:', e);
+        setMapError('Failed to load map. Please check your API key.');
+      });
+
+      mapRef.current = map;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLoc(coords);
+          map.setCenter([coords.lng, coords.lat]);
+        }, (err) => {
+          console.log('Geolocation error:', err);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to initialize map:', error);
+      setMapError('Failed to initialize map. Please check your API key.');
     }
 
-    return () => map.remove();
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
   }, []);
 
   const drawUserMarker = (loc: {lat: number, lng: number}) => {
@@ -774,6 +740,66 @@ const App = () => {
     <div style={{ position: 'fixed', inset: 0, background: '#121212' }}>
       <div ref={mapElement} style={{ width: '100%', height: '100%' }} />
 
+      {/* Loading Indicator */}
+      {!mapLoaded && !mapError && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#00d4ff',
+          fontSize: '18px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '15px'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #333',
+            borderTop: '3px solid #00d4ff',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <span>Loading Map...</span>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {mapError && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(30, 30, 30, 0.98)',
+          border: '1px solid #ff4444',
+          borderRadius: '12px',
+          padding: '30px',
+          maxWidth: '400px',
+          textAlign: 'center',
+          zIndex: 3000
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</div>
+          <h3 style={{ color: '#ff4444', margin: '0 0 10px 0' }}>Map Error</h3>
+          <p style={{ color: '#ccc', margin: '0 0 20px 0', lineHeight: '1.5' }}>{mapError}</p>
+          <div style={{ fontSize: '12px', color: '#888', textAlign: 'left', background: '#1a1a1a', padding: '15px', borderRadius: '8px' }}>
+            <strong>To fix this:</strong><br/>
+            1. Get a TomTom API key from <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#00d4ff' }}>developer.tomtom.com</a><br/>
+            2. Create a .env file in the frontend directory<br/>
+            3. Add: VITE_TOMTOM_API_KEY=your_api_key<br/>
+            4. Restart the dev server
+          </div>
+        </div>
+      )}
+
       {/* Navigation Popup */}
       {isNavigating && stats && stats.instructions && stats.instructions.length > 0 && (
         <div className="nav-popup">
@@ -1209,9 +1235,8 @@ const App = () => {
 
         .tt-attribution { display: none !important; }
       `}</style>
-		</div>
-	);
+    </div>
+  );
 };
 
 export default App;
-
