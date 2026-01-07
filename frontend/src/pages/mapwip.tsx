@@ -1092,7 +1092,7 @@ const App = () => {
         .step-text { color: #fff; font-size: 13px; }
         .step-dist { color: #888; font-size: 12px; }
 
-        .user-dot { width: 20px; height: 20px; }
+        .user-dot { width: 20px; height: 20px;}
         .poi-marker { width: 32px; height: 32px; background: rgba(0, 212, 255, 0.9); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         .poi-marker:hover { transform: scale(1.2); }
         .poi-gas_stations { background: #ff9500; }
