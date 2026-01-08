@@ -56,6 +56,7 @@ const App = () => {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const poiMarkersRef = useRef<any[]>([]);
   const userMarkerRef = useRef<any>(null);
   const [userLoc, setUserLoc] = useState({ lat: 40.32988, lng: -74.37149 });
   const [inputValue, setInputValue] = useState('');
@@ -133,13 +134,13 @@ const App = () => {
             const address = reverseGeocode.addresses?.[0]?.address?.freeformAddress || 'Unknown Location';
 
             // Get static map image using TomTom's Map Display API for static images
-            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&style=main&center=${lng},${lat}&zoom=16&width=400&height=200&format=png`;
+            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=basic&style=main&center=${lng},${lat}&zoom=16&width=400&height=200&format=png`;
 
             setSelectedLocation({ lat, lng, address, imageUrl });
           } catch (error) {
             console.error('Error fetching location details:', error);
             // Fallback to simple static map
-            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=hybrid&center=${lng},${lat}&zoom=15&width=400&height=200&format=png`;
+            const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=basic&center=${lng},${lat}&zoom=15&width=400&height=200&format=png`;
             setSelectedLocation({ lat, lng, address: 'Unknown Location', imageUrl });
           }
         });
@@ -254,14 +255,11 @@ const App = () => {
   }, [inputValue, userLoc]);
 
   const clearMap = (preservePoi = false) => {
+    // Remove all destination markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
-    if (!preservePoi) {
-      poiMarkers.forEach(m => m.remove());
-      setPoiMarkers([]);
-    }
-
-    // Remove layers first, then source (to avoid "source in use" errors)
+    
+    // Always clear route layers and source
     if (mapRef.current && mapRef.current.getLayer('route-arrows')) {
       try { mapRef.current.removeLayer('route-arrows'); } catch (e) {}
     }
@@ -270,6 +268,13 @@ const App = () => {
     }
     if (mapRef.current && mapRef.current.getSource('route')) {
       try { mapRef.current.removeSource('route'); } catch (e) {}
+    }
+    
+    // Only clear POI markers if not preserving them
+    if (!preservePoi) {
+      poiMarkers.forEach(m => m.remove());
+      setPoiMarkers([]);
+      setActivePoiType(null);
     }
   };
 
@@ -283,13 +288,29 @@ const App = () => {
     if (!stats) return;
     setIsNavigating(true);
     setNavStep(0);
-    setShowFullDirections(true);
+    setShowFullDirections(false);
+    
+    // Clear POI markers when starting navigation
+    poiMarkersRef.current.forEach(m => {
+      try { m.remove(); } catch (e) {}
+    });
+    poiMarkersRef.current = [];
+    setPoiMarkers([]);
+    setActivePoiType(null);
     
     if (stats.instructions && stats.instructions[0] && mapRef.current) {
       const firstStep = stats.instructions[0];
-      if (firstStep.point) {
+      if (firstStep.point && !isNaN(firstStep.point.lng) && !isNaN(firstStep.point.lat)) {
         mapRef.current.flyTo({
           center: [firstStep.point.lng, firstStep.point.lat],
+          zoom: 17,
+          pitch: 60,
+          bearing: 0
+        });
+      } else {
+        // Fallback to destination
+        mapRef.current.flyTo({
+          center: [stats.lng, stats.lat],
           zoom: 17,
           pitch: 60,
           bearing: 0
@@ -304,7 +325,7 @@ const App = () => {
       const newStep = navStep + 1;
       setNavStep(newStep);
       const step = stats.instructions[newStep];
-      if (step.point && mapRef.current) {
+      if (step?.point && !isNaN(step.point.lng) && !isNaN(step.point.lat) && mapRef.current) {
         mapRef.current.flyTo({
           center: [step.point.lng, step.point.lat],
           zoom: 17,
@@ -320,7 +341,7 @@ const App = () => {
       const newStep = navStep - 1;
       setNavStep(newStep);
       const step = stats?.instructions?.[newStep];
-      if (step?.point && mapRef.current) {
+      if (step?.point && !isNaN(step.point.lng) && !isNaN(step.point.lat) && mapRef.current) {
         mapRef.current.flyTo({
           center: [step.point.lng, step.point.lat],
           zoom: 17,
@@ -335,7 +356,7 @@ const App = () => {
     if (!stats?.instructions?.[index]) return;
     setNavStep(index);
     const step = stats.instructions[index];
-    if (step.point && mapRef.current) {
+    if (step.point && !isNaN(step.point.lng) && !isNaN(step.point.lat) && mapRef.current) {
       mapRef.current.flyTo({
         center: [step.point.lng, step.point.lat],
         zoom: 17,
@@ -394,6 +415,8 @@ const App = () => {
         }
       });
 
+      // Update both state and ref
+      poiMarkersRef.current = newMarkers;
       setPoiMarkers(newMarkers);
 
       if (newMarkers.length > 0 && mapRef.current) {
@@ -502,19 +525,57 @@ const App = () => {
   const calculateRoute = async (dLat: number, dLng: number, name: string) => {
     if (!mapRef.current) return;
 
-    // Clear any existing route first
-    clearMap();
+    console.log('calculateRoute called. Current POI markers count:', poiMarkersRef.current.length);
+    
+    // Clear all markers including POI markers when navigating to a destination
+    // First remove all POI markers from map using the ref
+    const markersToRemove = [...poiMarkersRef.current];
+    console.log('Removing', markersToRemove.length, 'POI markers');
+    markersToRemove.forEach((m, idx) => {
+      try {
+        console.log(`Removing POI marker ${idx}`);
+        m.remove();
+      } catch (e) {
+        console.error('Error removing POI marker:', e);
+      }
+    });
+    
+    // Remove all destination markers from map
+    const destMarkers = [...markersRef.current];
+    console.log('Removing', destMarkers.length, 'destination markers');
+    destMarkers.forEach((m, idx) => {
+      try {
+        console.log(`Removing destination marker ${idx}`);
+        m.remove();
+      } catch (e) {
+        console.error('Error removing destination marker:', e);
+      }
+    });
+    
+    // Clear state and refs
+    console.log('Clearing state');
+    poiMarkersRef.current = [];
+    setPoiMarkers([]);
+    setActivePoiType(null);
+    markersRef.current = [];
+
+    // Remove route layers and source
+    if (mapRef.current && mapRef.current.getLayer('route-arrows')) {
+      try { mapRef.current.removeLayer('route-arrows'); } catch (e) {}
+    }
+    if (mapRef.current && mapRef.current.getLayer('route')) {
+      try { mapRef.current.removeLayer('route'); } catch (e) {}
+    }
+    if (mapRef.current && mapRef.current.getSource('route')) {
+      try { mapRef.current.removeSource('route'); } catch (e) {}
+    }
 
     try {
       const route = await services.calculateRoute({
         key: API_KEY,
         locations: `${userLoc.lng},${userLoc.lat}:${dLng},${dLat}`,
         instructionsType: 'text',
-        routeType: 'fastest',
-        travelMode: 'car',
-        language: 'en-US',
-        computeBestOrder: true,
-        routeRepresentation: 'polyline'
+        traffic: true
       });
 
       const geojson = route.toGeoJson();
@@ -540,131 +601,29 @@ const App = () => {
         id: 'route',
         type: 'line',
         source: 'route',
-        paint: { 'line-color': '#00d4ff', 'line-width': 6 }
+        paint: { 'line-color': '#B794F4', 'line-width': 8, 'line-opacity': 0.9 }
       });
 
-      mapRef.current.addLayer({
-        id: 'route-arrows',
-        type: 'symbol',
-        source: 'route',
-        layout: {
-          'symbol-placement': 'line',
-          'symbol-spacing': 50,
-          'text-field': '▶',
-          'text-size': 14,
-          'text-rotate': 0
-        },
-        paint: {
-          'text-color': '#00d4ff',
-          'text-halo-color': '#000',
-          'text-halo-width': 2
-        }
-      });
-
-      const summary = geojson.features[0]?.properties?.summary;
-
-      // Build comprehensive instructions from all possible sources
+      // Build instructions array from guidance
+      const rawInstructions = route.routes?.[0]?.guidance?.instructions || [];
       const instructions: RouteInstruction[] = [];
 
-      // 1. First try route.guidance.instructions (most detailed)
-      if (route.guidance?.instructions && route.guidance.instructions.length > 0) {
-        route.guidance.instructions.forEach((inst: any) => {
-          // Get message - could be in different fields
-          const message = inst.message || inst.text || inst.streetName || '';
-          
-          // Get maneuver type and convert to icon
-          const maneuverCode = inst.maneuverType || 'STRAIGHT';
-          
-          // Get point - could be in different formats
-          let point = inst.point;
-          if (!point && inst.position) {
-            point = { lng: inst.position.lng || inst.position[0], lat: inst.position.lat || inst.position[1] };
-          }
-          if (!point && inst.coords) {
-            point = { lng: inst.coords.lng || inst.coords[0], lat: inst.coords.lat || inst.coords[1] };
-          }
-
+      // Process instructions from TomTom response
+      if (rawInstructions.length > 0) {
+        rawInstructions.forEach((inst: any) => {
           instructions.push({
-            maneuverType: maneuverCode,
-            streetName: inst.streetName || message.split(' ').slice(2).join(' ') || '',
-            message: message,
+            maneuverType: inst.maneuverType || 'straight',
+            streetName: inst.streetName || '',
+            message: inst.message || '',
             distance: inst.distance || 0,
             time: inst.travelTimeInSeconds || 0,
-            point: point || { lng: dLng, lat: dLat }
+            point: inst.point || { lng: dLng, lat: dLat }
           });
         });
       }
-      
-      // 2. If no guidance instructions, try instructionGroups
-      if (instructions.length === 0 && route.guidance?.instructionGroups && route.guidance.instructionGroups.length > 0) {
-        route.guidance.instructionGroups.forEach((group: any) => {
-          // Each group has multiple instructions
-          if (group.groupedInstructions && group.groupedInstructions.length > 0) {
-            group.groupedInstructions.forEach((inst: any) => {
-              const message = inst.message || inst.text || '';
-              instructions.push({
-                maneuverType: inst.maneuverType || 'STRAIGHT',
-                streetName: inst.streetName || '',
-                message: message,
-                distance: inst.distance || 0,
-                time: inst.travelTimeInSeconds || 0,
-                point: inst.point || { lng: dLng, lat: dLat }
-              });
-            });
-          } else {
-            // Add group level instruction
-            const message = group.firstInstructionMessage || group.lastInstructionMessage || '';
-            instructions.push({
-              maneuverType: group.maneuverType || 'STRAIGHT',
-              streetName: '',
-              message: message,
-              distance: group.distance || 0,
-              time: group.travelTimeInSeconds || 0,
-              point: { lng: dLng, lat: dLat }
-            });
-          }
-        });
-      }
 
-      // 3. Fallback: Extract from GeoJSON segments if still no instructions
-      if (instructions.length === 0 && geojson.features && geojson.features.length > 0) {
-        const routeFeature = geojson.features[0];
-        
-        // Check segments in the GeoJSON (cast to any to access legs)
-        const routeProps = routeFeature.properties as any;
-        if (routeProps?.legs) {
-          routeProps.legs.forEach((leg: any) => {
-            if (leg.steps) {
-              leg.steps.forEach((step: any) => {
-                // Create instruction from step
-                const maneuverType = step.maneuver?.type || 'straight';
-                const streetName = step.name || '';
-                const distance = step.distance || 0;
-                
-                // Get the first point of the step as the instruction point
-                let point = { lng: dLng, lat: dLat };
-                if (step.geometry?.coordinates && step.geometry.coordinates.length > 0) {
-                  const coords = step.geometry.coordinates[0];
-                  point = { lng: coords[0], lat: coords[1] };
-                }
-                
-                instructions.push({
-                  maneuverType,
-                  streetName,
-                  message: step.maneuver?.instruction || `Continue on ${streetName}`,
-                  distance,
-                  time: step.duration || 0,
-                  point
-                });
-              });
-            }
-          });
-        }
-      }
-
-      // 4. Final fallback: Create basic start/end instructions
+      // If no instructions from guidance, create basic start/end instructions
       if (instructions.length === 0) {
-        console.log('Creating fallback instructions');
         instructions.push({
           maneuverType: 'depart',
           streetName: 'Start at your location',
@@ -683,20 +642,9 @@ const App = () => {
         });
       }
 
-      console.log('Route calculated with', instructions.length, 'instructions');
-      if (instructions.length > 0) {
-        console.log('First few instructions:', instructions.slice(0, 3));
-      }
-
-      // Calculate distance and time from summary or sum of instructions
-      let totalDistance = summary?.lengthInMeters || 0;
-      let totalTime = summary?.travelTimeInSeconds || 0;
-      
-      // If no summary, calculate from instructions
-      if (totalDistance === 0 && instructions.length > 0) {
-        totalDistance = instructions.reduce((sum, inst) => sum + (inst.distance || 0), 0);
-        totalTime = instructions.reduce((sum, inst) => sum + (inst.time || 0), 0);
-      }
+      const summary = route.routes?.[0]?.summary || {};
+      const totalDistance = summary.lengthInMeters || 0;
+      const totalTime = summary.travelTimeInSeconds || 0;
 
       setStats({
         name,
@@ -1053,44 +1001,44 @@ const App = () => {
           background: rgba(20, 20, 20, 0.98); 
           border: 1px solid #333; 
           border-radius: 20px; 
-          width: 340px; 
+          width: 320px; 
           z-index: 2000; 
-          box-shadow: 0 -5px 40px rgba(0,0,0,0.6);
-          max-height: 70vh;
+          box-shadow: 0 -10px 42px rgba(0,0,0,0.6);
+          max-height: 50vh;
           overflow: hidden;
         }
         
-        .nav-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; }
-        .nav-destination { display: flex; align-items: center; gap: 12px; }
-        .nav-icon { font-size: 24px; }
-        .nav-destination h3 { margin: 0; color: #00d4ff; font-size: 15px; }
-        .nav-destination p { margin: 2px 0 0; color: #888; font-size: 12px; }
-        .cancel-btn { background: #333; border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+        .nav-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #333; }
+        .nav-destination { display: flex; align-items: center; color:#FFFFFf; gap: 10px; font-size:16px}
+        .nav-icon { font-size: 25px; }
+        .nav-destination h3 { margin: 0; color: #00d4ff; font-size: 14px; }
+        .nav-destination p { margin: 2px 0 0; color: #888; font-size: 11px; }
+        .cancel-btn {border: none; color: #00d4ff ; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; }
 
-        .nav-current-step { padding: 20px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 150, 200, 0.05)); }
-        .current-maneuver { display: flex; align-items: center; gap: 15px; }
-        .maneuver-large { font-size: 40px; }
+        .nav-current-step { padding: 15px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 150, 200, 0.05)); }
+        .current-maneuver { display: flex; align-items: center; gap: 12px; }
+        .maneuver-large { font-size: 32px; }
         .current-instruction { flex: 1; }
-        .instruction-main { margin: 0; color: white; font-size: 18px; font-weight: bold; }
-        .instruction-distance { margin: 5px 0 0; color: #00d4ff; font-size: 14px; }
+        .instruction-main { margin: 0; color: white; font-size: 14px; font-weight: bold; }
+        .instruction-distance { margin: 4px 0 0; color: #00d4ff; font-size: 12px; }
 
-        .nav-controls { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-top: 1px solid #333; }
-        .nav-controls button { background: #333; border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .nav-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-top: 1px solid #333; }
+        .nav-controls button { background: #333; border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .nav-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .step-progress { color: #888; font-size: 14px; }
+        .step-progress { color: #888; font-size: 12px; }
 
-        .nav-toggle { text-align: center; padding: 12px; color: #00d4ff; cursor: pointer; font-size: 13px; border-top: 1px solid #333; }
+        .nav-toggle { text-align: center; padding: 10px; color: #00d4ff; cursor: pointer; font-size: 12px; border-top: 1px solid #333; }
         .nav-toggle:hover { background: rgba(255,255,255,0.05); }
 
-        .nav-steps-list { max-height: 200px; overflow-y: auto; border-top: 1px solid #333; }
-        .nav-step-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #2a2a2a; }
+        .nav-steps-list { max-height: 150px; overflow-y: auto; border-top: 1px solid #333; }
+        .nav-step-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #2a2a2a; }
         .nav-step-item:hover { background: rgba(255,255,255,0.05); }
         .nav-step-item.active { background: rgba(0, 212, 255, 0.15); border-left: 3px solid #00d4ff; }
         .nav-step-item.completed { opacity: 0.5; }
-        .step-icon { font-size: 18px; width: 24px; text-align: center; }
+        .step-icon { font-size: 16px; width: 20px; text-align: center; }
         .step-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
-        .step-text { color: #fff; font-size: 13px; }
-        .step-dist { color: #888; font-size: 12px; }
+        .step-text { color: #fff; font-size: 12px; }
+        .step-dist { color: #888; font-size: 11px; }
 
         .user-dot { width: 20px; height: 20px;}
         .poi-marker { width: 32px; height: 32px; background: rgba(0, 212, 255, 0.9); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }

@@ -15,7 +15,7 @@ const Home = () => {
 					<div className="absolute bottom-[-500px] w-full h-full bg-gradient-to-t from-cyan-700/70 via-cyan-500/70 to-purple-400/70 blur-[160px] rounded-full" />
 				</motion.div>
 				<motion.div initial={{ opacity: 0.3, y: 0 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 2.0 }} className="fixed lg:w-[900px] h-[500px] w-[500px] rounded-full">
-					<div className="absolute lg:top-[-600px] top-[-550px] w-full h-full bg-gradient-to-b from-cyan-700/40 via-cyan-500/40 to-purple-400/40 blur-[120px] rounded-full" />
+					<div className="absolute lg:top-[-600px] top-[-550px] w-full h-full bg-linear-to-b from-cyan-700/40 via-cyan-500/40 to-purple-400/40 blur-[120px] rounded-full" />
 				</motion.div>
 			</div>
 
@@ -28,7 +28,7 @@ const Home = () => {
 						>
 							← Back
 						</Link>
-						<span className="bg-gradient-to-l from-cyan-700 via-cyan-500 to-purple-400 bg-clip-text text-transparent font-bold tracking-widest text-sm md:text-lg">
+						<span className="bg-linear-to-l from-cyan-700 via-cyan-500 to-purple-400 bg-clip-text text-transparent font-bold tracking-widest text-sm md:text-lg">
 							FBLA Project 25-26
 						</span>
 						<div className="flex space-x-2">

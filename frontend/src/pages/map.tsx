@@ -8,13 +8,13 @@ const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
 const initialCenter = [-0.112869, 51.504138]
 const initialZoom = 10
 
-const TomTomMap = ({ apiKey, center, zoom }) => {
-  const mapContainer = useRef(null);
-  const mapInstance = useRef(null);
+const TomTomMap = ({ apiKey, center, zoom }: {apiKey: string, center: [number,number], zoom: number}) => {
+  const mapContainer = useRef<HTMLDivElement| null>(null);
+  const mapInstance = useRef<tt.Map| null>(null);
 
   useEffect(() => {
 
-    if (mapInstance.current) return;
+    if (!mapInstance.current||!API_KEY) return;
 
 
     mapInstance.current = tt.map({
@@ -22,9 +22,7 @@ const TomTomMap = ({ apiKey, center, zoom }) => {
       container: mapContainer.current,
       center: center,
       zoom: zoom,
-      style: {
-        map: 'basic_main',
-      },
+      style: 'basic_main',
     });
 
     
