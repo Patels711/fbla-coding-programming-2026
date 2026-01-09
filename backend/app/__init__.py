@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
+from extensions import bcrypt
 import os
 from dotenv import load_dotenv
 
@@ -16,7 +18,17 @@ def create_app():
 
     db.init_app(app)
 
-    # import models here to register them with SQLAlchemy
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(uid):
+        return User.query.get(uid)
+
+    bcrypt.init_app(app)
+
+    from app.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
 
     Migrate(app, db)
 
