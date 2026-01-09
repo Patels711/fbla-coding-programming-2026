@@ -2,7 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from extensions import bcrypt
+from app.extensions import bcrypt
 import os
 from dotenv import load_dotenv
 
