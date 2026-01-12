@@ -20,7 +20,7 @@ const TomTomMap = ({ apiKey, center, zoom }: {apiKey: string, center: [number,nu
     mapInstance.current = tt.map({
       key: apiKey,
       container: mapContainer.current,
-      center: center,
+      center: initialCenter,
       zoom: zoom,
       style: 'basic_main',
     });

@@ -36,7 +36,7 @@ const Login = () => {
 
 	return (
 		<div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-			<div className="fixed inset-0 -z-10">
+			<div className="fixed inset-0 backdrop-blur-[400px] -z-10">
 				<ShaderGradientCanvas
 					pixelDensity={10}
 					style={{ width: '100%', height: '100%' }}

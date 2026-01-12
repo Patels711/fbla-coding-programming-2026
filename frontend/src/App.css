@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  --accent: oklch(0.7 0.22 290);
 }
 
 .logo {
