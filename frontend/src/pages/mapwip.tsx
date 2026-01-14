@@ -250,7 +250,7 @@ const App = () => {
       } catch (e) { 
         console.error('Autocomplete error:', e); 
       }
-    }, 300);
+    }, 100);
     return () => clearTimeout(timer);
   }, [inputValue, userLoc]);
 
@@ -488,7 +488,8 @@ const App = () => {
     markersRef.current.push(marker);
 
     if (mapRef.current) {
-      mapRef.current.flyTo({ center: destLngLat, zoom: 15 });
+      mapRef.current.flyTo({ center: destLngLat, zoom: 15
+       });
     }
 
     calculateRoute(lat, lng, poiName);

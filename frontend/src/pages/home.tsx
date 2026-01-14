@@ -8,7 +8,7 @@ const Home = () => {
 	const marginTop = useTransform(scrollY, [0, 100], ["0px", "12px"]);
 	const bgColor = useTransform(scrollY, [0, 100], ["rgba(23, 23, 23, 1)", "rgba(30, 30, 30, 0.7)"]);
 	return (
-		<div className="min-h-screen bg-neutral-900 relative bg-neutral-00 w-full overscroll-none">
+		<div className="min-h-screen bg-neutral-900 relative w-full overscroll-none">
 
 			<div className="fixed backdrop-blur-[1000px] inset-0 bg-neutral-900 pointer-events-none w-full z-0 flex items-center justify-center overscroll-none">
 				<motion.div initial={{ opacity: 0.4, y: 0 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 2.0 }} className="fixed lg:w-[1200px] h-[500px] w-[600px] -z-0 rounded-full">
