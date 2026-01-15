@@ -181,7 +181,7 @@ const App = () => {
     
     const el = document.createElement('div');
     el.className = 'user-dot';
-    el.innerHTML = '<div style="width:16px;height:16px;background:#00d4ff;border:3px solid white;border-radius:50%;box-shadow:0 0 15px #00d4ff;"></div>';
+    el.innerHTML = '<div class="w-4 h-4 bg-[#00d4ff] border-[3px] border-white rounded-full shadow-[0_0_15px_#00d4ff]"></div>';
     
     userMarkerRef.current = new tt.Marker({ element: el })
       .setLngLat([loc.lng, loc.lat])
@@ -399,7 +399,12 @@ const App = () => {
           const lat = getLat(poi.position)!;
           
           const el = document.createElement('div');
-          el.className = `poi-marker poi-${type.toLowerCase()}`;
+          let bgClass = 'bg-[#00d4ff]';
+          if (type === 'GAS_STATIONS') bgClass = 'bg-orange-500';
+          else if (type === 'BANKS' || type === 'PARKS') bgClass = 'bg-green-500';
+          else if (type === 'RESTAURANTS') bgClass = 'bg-red-500';
+
+          el.className = `flex items-center justify-center w-8 h-8 ${bgClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
           el.innerHTML = getPoiIcon(type);
 
           const marker = new tt.Marker({ element: el })
@@ -478,7 +483,7 @@ const App = () => {
     const destLngLat: [number, number] = [lng, lat];
     
     const el = document.createElement('div');
-    el.className = 'dest-marker';
+    el.className = 'flex items-center justify-center text-4xl';
     el.innerHTML = '📍';
     
     const marker = new tt.Marker({ element: el })
@@ -686,505 +691,240 @@ const App = () => {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#121212' }}>
-      <div ref={mapElement} style={{ width: '100%', height: '100%' }} />
+    <div className="fixed inset-0 bg-neutral-900 flex">
+        <div ref={mapElement} className="w-full h-full rounded-[2%] relative [&_.tt-attribution]:hidden">
+          <div className="absolute w-2xl -z-50 top-0 left-0 bottom-0 bg-amber-100">
 
-      {/* Loading Indicator */}
-      {!mapLoaded && !mapError && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: '#00d4ff',
-          fontSize: '18px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid #333',
-            borderTop: '3px solid #00d4ff',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <span>Loading Map...</span>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      )}
-
-      {/* Error Display */}
-      {mapError && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'rgba(30, 30, 30, 0.98)',
-          border: '1px solid #ff4444',
-          borderRadius: '12px',
-          padding: '30px',
-          maxWidth: '400px',
-          textAlign: 'center',
-          zIndex: 3000
-        }}>
-          <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</div>
-          <h3 style={{ color: '#ff4444', margin: '0 0 10px 0' }}>Map Error</h3>
-          <p style={{ color: '#ccc', margin: '0 0 20px 0', lineHeight: '1.5' }}>{mapError}</p>
-          <div style={{ fontSize: '12px', color: '#888', textAlign: 'left', background: '#1a1a1a', padding: '15px', borderRadius: '8px' }}>
-            <strong>To fix this:</strong><br/>
-            1. Get a TomTom API key from <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#00d4ff' }}>developer.tomtom.com</a><br/>
-            2. Create a .env file in the frontend directory<br/>
-            3. Add: VITE_TOMTOM_API_KEY=your_api_key<br/>
-            4. Restart the dev server
           </div>
-        </div>
-      )}
+          {/*Animation for loading map*/}
+          {!mapLoaded && !mapError && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#00d4ff] text-lg flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-[3px] border-neutral-800 border-t-[#00d4ff] rounded-full animate-spin"></div>
+              <span>Loading Map...</span>
+            </div>
+          )}
 
-      {/* Navigation Popup */}
-      {isNavigating && stats && stats.instructions && stats.instructions.length > 0 && (
-        <div className="nav-popup">
-          <div className="nav-header">
-            <div className="nav-destination">
-              <span className="nav-icon">📍</span>
-              <div>
-                <h4>{stats.name}</h4>
-                <p>{stats.miles} mi • {stats.mins} min</p>
+          {/*Display for error*/}
+          {mapError && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-900/98 border border-red-500 rounded-xl p-8 max-w-[400px] text-center z-[3000]">
+              <div className="text-[40px] mb-4">⚠️</div>
+              <h3 className="text-red-500 m-0 mb-2.5">Map Error</h3>
+              <p className="text-gray-300 m-0 mb-5 leading-relaxed">{mapError}</p>
+              <div className="text-xs text-gray-400 text-left bg-neutral-900 p-4 rounded-lg">
+                <strong>To fix this:</strong><br/>
+                1. Get a TomTom API key from <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" className="text-[#00d4ff]">developer.tomtom.com</a><br/>
+                2. Create a .env file in the frontend directory<br/>
+                2. Create a .env file in the frontend directory<br/>
+                3. Add: VITE_TOMTOM_API_KEY=your_api_key<br/>
+                4. Restart the dev server
               </div>
             </div>
-            <button className="cancel-btn" onClick={cancelNavigation}>✕</button>
-          </div>
+          )}
 
-          <div className="nav-current-step">
-            <div className="current-maneuver">
-              <span className="maneuver-large">{getManeuverIcon(stats.instructions[navStep]?.maneuverType || 'straight')}</span>
-              <div className="current-instruction">
-                <p className="instruction-main">{stats.instructions[navStep]?.streetName || stats.instructions[navStep]?.message || 'Continue'}</p>
-                <p className="instruction-distance">{formatDistance(stats.instructions[navStep]?.distance || 0)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="nav-controls">
-            <button onClick={prevNavStep} disabled={navStep === 0}>◀</button>
-            <span className="step-progress">{navStep + 1} / {stats.instructions.length}</span>
-            <button onClick={nextNavStep} disabled={navStep >= stats.instructions.length - 1}>▶</button>
-          </div>
-
-          <div className="nav-toggle" onClick={() => setShowFullDirections(!showFullDirections)}>
-            {showFullDirections ? '▲ Hide all steps' : '▼ Show all steps'}
-          </div>
-
-          {showFullDirections && (
-            <div className="nav-steps-list">
-              {stats.instructions.map((inst, idx) => (
-                <div 
-                  key={idx} 
-                  className={`nav-step-item ${idx === navStep ? 'active' : ''} ${idx < navStep ? 'completed' : ''}`}
-                  onClick={() => jumpToStep(idx)}
-                >
-                  <span className="step-icon">{getManeuverIcon(inst.maneuverType)}</span>
-                  <div className="step-info">
-                    <span className="step-text">{inst.streetName || inst.message}</span>
-                    <span className="step-dist">{formatDistance(inst.distance)}</span>
+          {/* Navigation Popup */}
+          {isNavigating && stats && stats.instructions && stats.instructions.length > 0 && (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-neutral-900/98 border border-neutral-800 rounded-2xl w-80 z-[2000] shadow-2xl max-h-[50vh] overflow-hidden">
+              <div className="flex justify-between items-center p-3 px-4 border-b border-neutral-800">
+                <div className="flex items-center text-white gap-2.5 text-base">
+                  <span className="text-2xl">📍</span>
+                  <div>
+                    <h4 className="m-0 text-[#00d4ff] text-sm">{stats.name}</h4>
+                    <p className="m-0 mt-0.5 text-gray-400 text-[11px]">{stats.miles} mi • {stats.mins} min</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Search Overlay */}
-      <div className="ui-overlay">
-        <div className="search-container">
-          <div className="search-wrap">
-            <input
-              placeholder="Search location..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
-            {inputValue && (
-              <button className="clear-text" onClick={() => setInputValue('')}>✕</button>
-            )}
-            <button className="search-btn" onClick={handleSearch}>🔍</button>
-          </div>
-
-          {suggestions.length > 0 && (
-            <div className="suggestions-list">
-              {suggestions.map((s, i) => (
-                <div key={i} className="suggestion-item" onClick={() => handleSelectSuggestion(s)}>
-                  <strong>{s.poi?.name || s.address?.freeformAddress || 'Unknown'}</strong>
-                  <span>{s.address?.municipality || ''}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="poi-buttons">
-          <button
-            onClick={() => searchPoi(POI_CATEGORIES.GAS_STATIONS, 'GAS_STATIONS')}
-            className={activePoiType === 'GAS_STATIONS' ? 'active' : ''}
-          >
-            ⛽ Gas
-          </button>
-          <button
-            onClick={() => searchPoi(POI_CATEGORIES.BANKS, 'BANKS')}
-            className={activePoiType === 'BANKS' ? 'active' : ''}
-          >
-            🏦 Banks
-          </button>
-          <button
-            onClick={() => searchPoi(POI_CATEGORIES.PARKS, 'PARKS')}
-            className={activePoiType === 'PARKS' ? 'active' : ''}
-          >
-            🌳 Parks
-          </button>
-          <button
-            onClick={() => searchPoi(POI_CATEGORIES.RESTAURANTS, 'RESTAURANTS')}
-            className={activePoiType === 'RESTAURANTS' ? 'active' : ''}
-          >
-            🍽️ Food
-          </button>
-        </div>
-      </div>
-
-      {/* Route Card */}
-      {stats && !isNavigating && (
-        <div className="route-card">
-          <div className="route-info">
-            <h3>{stats.name}</h3>
-            <p>{stats.miles} mi • {stats.mins} min</p>
-          </div>
-          <div className="route-actions">
-            <button className="nav-btn" onClick={startNavigation}>Start Navigation</button>
-            <button className="dismiss-btn" onClick={() => { setStats(null); clearMap(); }}>Close</button>
-          </div>
-        </div>
-      )}
-
-      {/* Location Info Popup */}
-      {selectedLocation && (
-        <div className="location-popup">
-          <div className="location-header">
-            <h3>Location Details</h3>
-            <button className="close-btn" onClick={() => setSelectedLocation(null)}>✕</button>
-          </div>
-          <div className="location-content">
-            {selectedLocation.imageUrl && (
-              <div className="location-image-container">
-                <img 
-                  src={selectedLocation.imageUrl} 
-                  alt="Location" 
-                  className="location-image"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = '<div class="location-image-error">Image unavailable<br/>Tap Route to navigate</div>';
-                  }}
-                />
+                <button className="border-none text-[#00d4ff] w-7 h-7 rounded-full cursor-pointer text-sm hover:bg-white/5" onClick={cancelNavigation}>✕</button>
               </div>
-            )}
-            <p className="location-address">📍 {selectedLocation.address}</p>
-            <div className="location-actions">
-              <button className="route-btn" onClick={() => {
-                calculateRoute(selectedLocation.lat, selectedLocation.lng, selectedLocation.address);
-                setSelectedLocation(null);
-              }}>🧭 Navigate</button>
+
+              <div className="p-4 bg-gradient-to-br from-[#00d4ff1a] to-[#0096c80d]">
+                <div className="flex items-center gap-3">
+                  <span className="text-[32px]">{getManeuverIcon(stats.instructions[navStep]?.maneuverType || 'straight')}</span>
+                  <div className="flex-1">
+                    <p className="m-0 text-white text-sm font-bold">{stats.instructions[navStep]?.streetName || stats.instructions[navStep]?.message || 'Continue'}</p>
+                    <p className="m-0 mt-1 text-[#00d4ff] text-xs">{formatDistance(stats.instructions[navStep]?.distance || 0)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center p-2.5 px-4 border-t border-neutral-800">
+                <button className="bg-neutral-800 border-none text-white py-2 px-4 rounded-lg cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-700" onClick={prevNavStep} disabled={navStep === 0}>◀</button>
+                <span className="text-gray-400 text-xs">{navStep + 1} / {stats.instructions.length}</span>
+                <button className="bg-neutral-800 border-none text-white py-2 px-4 rounded-lg cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-700" onClick={nextNavStep} disabled={navStep >= stats.instructions.length - 1}>▶</button>
+              </div>
+
+              <div className="text-center p-2.5 text-[#00d4ff] cursor-pointer text-xs border-t border-neutral-800 hover:bg-white/5" onClick={() => setShowFullDirections(!showFullDirections)}>
+                {showFullDirections ? '▲ Hide all steps' : '▼ Show all steps'}
+              </div>
+
+              {showFullDirections && (
+                <div className="max-h-[150px] overflow-y-auto border-t border-neutral-800">
+                  {stats.instructions.map((inst, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`flex items-center gap-2.5 p-2.5 px-4 cursor-pointer border-b border-neutral-800 hover:bg-white/5 ${idx === navStep ? 'bg-[#00d4ff26] border-l-[3px] border-l-[#00d4ff]' : ''} ${idx < navStep ? 'opacity-50' : ''}`}
+                      onClick={() => jumpToStep(idx)}
+                    >
+                      <span className="text-base w-5 text-center">{getManeuverIcon(inst.maneuverType)}</span>
+                      <div className="flex-1 flex justify-between items-center">
+                        <span className="text-white text-xs">{inst.streetName || inst.message}</span>
+                        <span className="text-gray-400 text-[11px]">{formatDistance(inst.distance)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Search Overlay */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-[1000]">
+            <div className="bg-neutral-900/95 border border-neutral-800 rounded-xl overflow-hidden shadow-lg">
+              <div className="flex items-center p-2 px-3 gap-2">
+                <input
+                  className="flex-1 border-none bg-transparent text-white text-[15px] outline-none placeholder-neutral-500"
+                  placeholder="Search location..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+                {inputValue && (
+                  <button className="bg-transparent border-none text-slate-400 cursor-pointer text-lg p-1 px-2 hover:text-white" onClick={() => setInputValue('')}>x</button>
+                )}
+                <button className="bg-[#00d4ff] border-none text-black p-2 px-3 rounded-lg cursor-pointer text-sm font-bold hover:bg-[#00b7db]" onClick={handleSearch}>🔍</button>
+              </div>
+
+              {suggestions.length > 0 && (
+                <div className="bg-neutral-900/95 border-t border-neutral-800 max-h-[180px] overflow-y-auto scrollbar-hide">
+                  {suggestions.map((s, i) => (
+                   <div key={i} className="p-3 border-b border-neutral-800 hover:bg-neutral-800" onClick={() => handleSelectSuggestion(s)}>
+                   <strong className="text-white block text-sm">{s.poi?.name || s.address?.freeformAddress || 'Unknown'}</strong>
+                   <span className="text-gray-400 text-xs">{s.address?.municipality || ''}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2.5">
+              {[
+                { id: POI_CATEGORIES.GAS_STATIONS, type: 'GAS_STATIONS', label: '⛽ Gas' },
+                { id: POI_CATEGORIES.BANKS, type: 'BANKS', label: '🏦 Banks' },
+                { id: POI_CATEGORIES.PARKS, type: 'PARKS', label: '🌳 Parks' },
+                { id: POI_CATEGORIES.RESTAURANTS, type: 'RESTAURANTS', label: '🍽️ Food' }
+              ].map(poi => (
+                <button
+                  key={poi.type}
+                  onClick={() => searchPoi(poi.id, poi.type)}
+                  className={`bg-neutral-900/95 text-gray-300 border border-neutral-800 p-3 px-2 rounded-xl cursor-pointer text-[13px] transition-all hover:bg-neutral-800 ${activePoiType === poi.type ? 'bg-[#00d4ff] text-black border-[#00d4ff] hover:bg-[#00d4ff]' : ''}`}
+                >
+                  {poi.label}
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Route Card */}
+          {stats && !isNavigating && (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-neutral-900/95 border border-neutral-800 p-4 rounded-2xl w-[300px] z-[1000] shadow-xl">
+              <div className="mb-3">
+                <h3 className="m-0 mb-1 text-[#00d4ff] text-base">{stats.name}</h3>
+                <p className="m-0 mb-3 text-gray-400 text-sm">{stats.miles} mi • {stats.mins} min</p>
+              </div>
+              <div className="flex gap-2.5">
+                <button className="flex-[2] bg-[#00d4ff] text-black border-none p-2.5 rounded-lg font-bold cursor-pointer hover:bg-[#00b7db]" onClick={startNavigation}>Start Navigation</button>
+                <button className="flex-1 bg-neutral-800 text-white border-none p-2.5 rounded-lg cursor-pointer hover:bg-neutral-700" onClick={() => { setStats(null); clearMap(); }}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {/* Location Info Popup */}
+          {selectedLocation && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-900/98 border border-neutral-800 rounded-2xl w-80 z-[3000] shadow-2xl max-h-[80vh] overflow-hidden">
+              <div className="flex justify-between items-center p-4 border-b border-neutral-800">
+                <h3 className="m-0 text-[#00d4ff] text-lg">Location Details</h3>
+                <button className="bg-neutral-800 border-none text-white w-8 h-8 rounded-full cursor-pointer text-base hover:bg-neutral-700" onClick={() => setSelectedLocation(null)}>✕</button>
+              </div>
+              <div className="p-4">
+                {selectedLocation.imageUrl && (
+                  <div className="w-full h-[180px] bg-neutral-900 rounded-lg mb-3 overflow-hidden flex items-center justify-center border border-neutral-800">
+                    <img 
+                      src={selectedLocation.imageUrl} 
+                      alt="Location" 
+                      className="w-full h-full object-cover block"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = '<div class="text-red-400 text-xs text-center p-5">Image unavailable<br/>Tap Route to navigate</div>';
+                      }}
+                    />
+                  </div>
+                )}
+                <p className="text-white text-sm mb-4 leading-relaxed p-2.5 bg-white/5 rounded-lg">📍 {selectedLocation.address}</p>
+                <div className="flex justify-center gap-2.5">
+                  <button className="bg-gradient-to-br from-[#00d4ff] to-[#0099cc] text-black border-none p-3 px-6 rounded-lg font-bold cursor-pointer text-sm flex-1 transition-transform hover:scale-[1.02]" onClick={() => {
+                    calculateRoute(selectedLocation.lat, selectedLocation.lng, selectedLocation.address);
+                    setSelectedLocation(null);
+                  }}>🧭 Navigate</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Side Bar */}
+          <div className="absolute bottom-24 right-4 flex flex-col gap-2.5 z-[1000]">
+            <button 
+              onClick={() => {
+                if (!mapRef.current) return;
+                if (trafficOn) {
+                  mapRef.current.hideTrafficFlow();
+                  mapRef.current.hideTrafficIncidents();
+                } else {
+                  mapRef.current.showTrafficFlow();
+                  mapRef.current.showTrafficIncidents();
+                }
+                setTrafficOn(!trafficOn);
+              }} 
+              className={`w-[60px] h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${trafficOn ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
+              title={trafficOn ? 'Hide Traffic' : 'Show Traffic'}
+            >
+              🚦
+            </button>
+            <button 
+              onClick={() => {
+                if (mapRef.current) {
+                  mapRef.current.flyTo({ center: [userLoc.lng, userLoc.lat], zoom: 15 });
+                }
+              }}
+              className="w-[60px] h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff]"
+              title="My Location"
+            >
+              📍
+            </button>
+            <button 
+              onClick={() => {
+                setMapPerspective(prev => prev === '2d' ? '3d' : '2d');
+              }}
+              className={`w-[60px] h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapPerspective === '3d' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
+              title={mapPerspective === '2d' ? 'Switch to 3D View' : 'Switch to 2D View'}
+            >
+              <span className="text-[11px] font-bold tracking-wide">{mapPerspective === '2d' ? '2D' : '3D'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setMapStyle(prev => {
+                  const styles = ['regular', 'satellite', 'dark', 'hybrid'];
+                  const currentIndex = styles.indexOf(prev);
+                  const nextIndex = (currentIndex + 1) % styles.length;
+                  return styles[nextIndex] as 'regular' | 'satellite' | 'dark' | 'hybrid';
+                });
+              }}
+              className={`w-[60px] h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapStyle !== 'regular' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
+              title={`Current: ${mapStyle}`}
+            >
+              <span className="text-[11px] font-bold tracking-wide">{mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}</span>
+            </button>
+          </div>
         </div>
-      )}
-
-      {/* Side Bar */}
-      <div className="side-bar">
-        <button 
-          onClick={() => {
-            if (!mapRef.current) return;
-            if (trafficOn) {
-              mapRef.current.hideTrafficFlow();
-              mapRef.current.hideTrafficIncidents();
-            } else {
-              mapRef.current.showTrafficFlow();
-              mapRef.current.showTrafficIncidents();
-            }
-            setTrafficOn(!trafficOn);
-          }} 
-          className={trafficOn ? 'on' : ''}
-          title={trafficOn ? 'Hide Traffic' : 'Show Traffic'}
-        >
-          🚦
-        </button>
-        <button 
-          onClick={() => {
-            if (mapRef.current) {
-              mapRef.current.flyTo({ center: [userLoc.lng, userLoc.lat], zoom: 15 });
-            }
-          }}
-          title="My Location"
-        >
-          📍
-        </button>
-        <button 
-          onClick={() => {
-            setMapPerspective(prev => prev === '2d' ? '3d' : '2d');
-          }}
-          className={mapPerspective === '3d' ? 'on' : ''}
-          title={mapPerspective === '2d' ? 'Switch to 3D View' : 'Switch to 2D View'}
-        >
-          <span className="btn-label">{mapPerspective === '2d' ? '2D' : '3D'}</span>
-        </button>
-        <button
-          onClick={() => {
-            setMapStyle(prev => {
-              const styles = ['regular', 'satellite', 'dark', 'hybrid'];
-              const currentIndex = styles.indexOf(prev);
-              const nextIndex = (currentIndex + 1) % styles.length;
-              return styles[nextIndex] as 'regular' | 'satellite' | 'dark' | 'hybrid';
-            });
-          }}
-          className={mapStyle !== 'regular' ? 'on' : ''}
-          title={`Current: ${mapStyle}`}
-        >
-          <span className="btn-label">{mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}</span>
-        </button>
       </div>
-
-
-
-      <style>{`
-        .ui-overlay { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
-        .search-container { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .search-wrap { display: flex; align-items: center; padding: 8px 12px; gap: 8px; }
-        .search-wrap input { flex: 1; border: none; background: transparent; color: white; font-size: 15px; outline: none; }
-        .clear-text { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 4px 8px; }
-        .search-btn { background: #00d4ff; border: none; color: #000; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
-
-        .suggestions-list { background: rgba(20, 20, 20, 0.95); border-top: 1px solid #333; max-height: 180px; overflow-y: auto; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid #2a2a2a; cursor: pointer; }
-        .suggestion-item:hover { background: #2a2a2a; }
-        .suggestion-item strong { color: #fff; display: block; font-size: 14px; }
-        .suggestion-item span { color: #888; font-size: 12px; }
-
-        .poi-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .poi-buttons button { background: rgba(20, 20, 20, 0.95); color: #ddd; border: 1px solid #333; padding: 12px 8px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
-        .poi-buttons button:hover { background: #2a2a2a; }
-        .poi-buttons button.active { background: #00d4ff; color: #000; border-color: #00d4ff; }
-
-        .side-bar { position: absolute; bottom: 100px; right: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .side-bar button { width: 60px; height: 50px; background: rgba(20, 20, 20, 0.95); color: white; border: 1px solid #333; border-radius: 12px; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.2s; flex-direction: column; gap: 2px; padding: 4px; }
-        .side-bar button.on { border-color: #00d4ff; color: #00d4ff; background: rgba(0, 212, 255, 0.1); }
-        .side-bar button:hover { transform: scale(1.05); border-color: #00d4ff; }
-        .btn-label { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-
-        .route-card { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(20, 20, 20, 0.95); border: 1px solid #333; padding: 18px; border-radius: 16px; width: 300px; z-index: 1000; box-shadow: 0 -5px 30px rgba(0,0,0,0.5); }
-        .route-card h3 { margin: 0 0 5px; color: #00d4ff; font-size: 16px; }
-        .route-card p { margin: 0 0 12px; color: #aaa; font-size: 14px; }
-        .route-actions { display: flex; gap: 10px; }
-        .nav-btn { flex: 2; background: #00d4ff; color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .dismiss-btn { flex: 1; background: #333; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
-
-        .nav-popup { 
-          position: absolute; 
-          bottom: 20px; 
-          left: 50%; 
-          transform: translateX(-50%); 
-          background: rgba(20, 20, 20, 0.98); 
-          border: 1px solid #333; 
-          border-radius: 20px; 
-          width: 320px; 
-          z-index: 2000; 
-          box-shadow: 0 -10px 42px rgba(0,0,0,0.6);
-          max-height: 50vh;
-          overflow: hidden;
-        }
-        
-        .nav-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #333; }
-        .nav-destination { display: flex; align-items: center; color:#FFFFFf; gap: 10px; font-size:16px}
-        .nav-icon { font-size: 25px; }
-        .nav-destination h3 { margin: 0; color: #00d4ff; font-size: 14px; }
-        .nav-destination p { margin: 2px 0 0; color: #888; font-size: 11px; }
-        .cancel-btn {border: none; color: #00d4ff ; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; }
-
-        .nav-current-step { padding: 15px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 150, 200, 0.05)); }
-        .current-maneuver { display: flex; align-items: center; gap: 12px; }
-        .maneuver-large { font-size: 32px; }
-        .current-instruction { flex: 1; }
-        .instruction-main { margin: 0; color: white; font-size: 14px; font-weight: bold; }
-        .instruction-distance { margin: 4px 0 0; color: #00d4ff; font-size: 12px; }
-
-        .nav-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-top: 1px solid #333; }
-        .nav-controls button { background: #333; border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-        .nav-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .step-progress { color: #888; font-size: 12px; }
-
-        .nav-toggle { text-align: center; padding: 10px; color: #00d4ff; cursor: pointer; font-size: 12px; border-top: 1px solid #333; }
-        .nav-toggle:hover { background: rgba(255,255,255,0.05); }
-
-        .nav-steps-list { max-height: 150px; overflow-y: auto; border-top: 1px solid #333; }
-        .nav-step-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #2a2a2a; }
-        .nav-step-item:hover { background: rgba(255,255,255,0.05); }
-        .nav-step-item.active { background: rgba(0, 212, 255, 0.15); border-left: 3px solid #00d4ff; }
-        .nav-step-item.completed { opacity: 0.5; }
-        .step-icon { font-size: 16px; width: 20px; text-align: center; }
-        .step-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
-        .step-text { color: #fff; font-size: 12px; }
-        .step-dist { color: #888; font-size: 11px; }
-
-        .user-dot { width: 20px; height: 20px;}
-        .poi-marker { width: 32px; height: 32px; background: rgba(0, 212, 255, 0.9); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
-        .poi-marker:hover { transform: scale(1.2); }
-        .poi-gas_stations { background: #ff9500; }
-        .poi-banks { background: #34c759; }
-        .poi-parks { background: #34c759; }
-        .poi-restaurants { background: #ff3b30; }
-        .dest-marker { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-
-        .location-popup {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: rgba(20, 20, 20, 0.98);
-          border: 1px solid #333;
-          border-radius: 16px;
-          width: 320px;
-          z-index: 3000;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-          max-height: 80vh;
-          overflow: hidden;
-        }
-
-        .location-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px;
-          border-bottom: 1px solid #333;
-        }
-
-        .location-header h3 {
-          margin: 0;
-          color: #00d4ff;
-          font-size: 18px;
-        }
-
-        .close-btn {
-          background: #333;
-          border: none;
-          color: white;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          cursor: pointer;
-          font-size: 16px;
-        }
-
-        .location-content {
-          padding: 16px;
-        }
-
-        .location-image-container {
-          width: 100%;
-          height: 180px;
-          background: #1a1a1a;
-          border-radius: 8px;
-          margin-bottom: 12px;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid #333;
-        }
-
-        .location-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        .location-image-loading {
-          color: #666;
-          font-size: 14px;
-        }
-
-        .location-image-error {
-          color: #ff6b6b;
-          font-size: 12px;
-          text-align: center;
-          padding: 20px;
-        }
-
-        .location-address {
-          color: #fff;
-          font-size: 14px;
-          margin-bottom: 16px;
-          line-height: 1.4;
-          padding: 10px;
-          background: rgba(255,255,255,0.05);
-          border-radius: 8px;
-        }
-
-        .location-actions {
-          display: flex;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .route-btn {
-          background: linear-gradient(135deg, #00d4ff, #0099cc);
-          color: #000;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-weight: bold;
-          cursor: pointer;
-          font-size: 14px;
-          flex: 1;
-          transition: transform 0.2s;
-        }
-
-        .route-btn:hover {
-          transform: scale(1.02);
-        }
-
-        .style-indicator {
-          position: absolute;
-          bottom: 165px;
-          right: 15px;
-          display: flex;
-          gap: 8px;
-          z-index: 1000;
-        }
-
-        .style-indicator span {
-          background: rgba(20, 20, 20, 0.95);
-          color: #00d4ff;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: bold;
-          border: 1px solid #333;
-        }
-
-        .style-name {
-          color: #ff9500 !important;
-        }
-
-        .tt-attribution { display: none !important; }
-      `}</style>
-    </div>
   );
 };
 
