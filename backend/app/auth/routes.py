@@ -10,12 +10,25 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        image = request.form.get('image')
 
         if User.query.filter_by(username=username).first():
             return jsonify({'message': 'Username already exists'}), 400
 
+        if image:
+            ext = os.path.splitext(image)[1]
+            random_filename = f"{os.urandom(16).hex()}{ext}"
+            
+            profile_picture = random_filename
+            
+            image_path = os.path.join('static/profile_pictures', random_filename)
+            with open(image_path, 'wb') as f:
+                f.write(image.read())
+        else:
+            profile_picture = 'default_profile_picture.png'
+
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(username=username, password_hash=password_hash)
+        new_user = User(username=username, password_hash=password_hash, profile_picture=profile_picture)
         db.session.add(new_user)
         db.session.commit()
 
@@ -50,5 +63,6 @@ def logout():
 def profile():
     return jsonify({
         'uid': current_user.uid,
-        'username': current_user.username
+        'username': current_user.username,
+        'profile_picture': current_user.profile_picture
     }), 200
