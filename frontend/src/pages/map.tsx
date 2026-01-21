@@ -11,12 +11,72 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
 
-const POI_CATEGORIES = {
-  GAS_STATIONS: '7311',
-  BANKS: '7321',
-  PARKS: '9362',
-  RESTAURANTS: '7315'
-};
+const POI_GROUPS = [
+  {
+    name: 'Automotive',
+    color: 'bg-orange-500',
+    items: [
+      { id: '7311', type: 'GAS_STATION', label: 'Gas Station', icon: '⛽' },
+      { id: '7313', type: 'PARKING', label: 'Parking Garage', icon: '🅿️' },
+      { id: '7310', type: 'REPAIR', label: 'Repair Facility', icon: '🔧' },
+      { id: '7312', type: 'RENTAL', label: 'Car Rental', icon: '🚗' },
+    ]
+  },
+  {
+    name: 'Food & Drink',
+    color: 'bg-red-500',
+    items: [
+      { id: '7315', type: 'RESTAURANT', label: 'Restaurant', icon: '🍽️' },
+      { id: '9376', type: 'CAFE', label: 'Cafe / Pub', icon: '☕' },
+      { id: '7349', type: 'WINERY', label: 'Winery', icon: '🍷' }
+    ]
+  },
+  {
+    name: 'Shopping',
+    color: 'bg-blue-500',
+    items: [
+      { id: '7373', type: 'SHOPPING', label: 'Shopping Center', icon: '🛍️' },
+      { id: '7332', type: 'MARKET', label: 'Supermarket', icon: '🛒' },
+      { id: '7327', type: 'STORE', label: 'Department Store', icon: '🏪' }
+    ]
+  },
+  {
+    name: 'Financial',
+    color: 'bg-emerald-600',
+    items: [
+      { id: '7328', type: 'BANK', label: 'Bank', icon: '🏦' },
+      { id: '7397', type: 'ATM', label: 'ATM', icon: '🏧' },
+      { id: '7326', type: 'PHARMACY', label: 'Pharmacy', icon: '💊' },
+    ]
+  },
+  {
+    name: 'Health',
+    color: 'bg-pink-500',
+    items: [
+      { id: '7321', type: 'HOSPITAL', label: 'Hospital', icon: '🏥' },
+      { id: '9373', type: 'DOCTOR', label: 'Doctor', icon: '👨‍⚕️' },
+      { id: '9374', type: 'DENTIST', label: 'Dentist', icon: '🦷' }
+    ]
+  },
+  {
+    name: 'Leisure & Ent.',
+    color: 'bg-purple-500',
+    items: [
+      { id: '7342', type: 'CINEMA', label: 'Movie Theater', icon: '🎬' },
+      { id: '7317', type: 'MUSEUM', label: 'Museum', icon: '🏛️' },
+      { id: '7374', type: 'STADIUM', label: 'Stadium', icon: '🏟️' },
+      { id: '9911', type: 'GOLF', label: 'Golf Course', icon: '⛳' }
+    ]
+  },
+  {
+    name: 'Travel',
+    color: 'bg-indigo-500',
+    items: [
+      { id: '7314', type: 'HOTEL', label: 'Hotel', icon: '🏨' },
+      { id: '7360', type: 'CAMPING', label: 'Camping', icon: '⛺' }
+    ]
+  }
+];
 
 const getLng = (pos: any): number | undefined => {
   if (!pos) return undefined;
@@ -79,6 +139,7 @@ const App = () => {
   const [mapStyle, setMapStyle] = useState<'regular' | 'satellite' | 'dark' | 'hybrid'>('regular');
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [isPoiDropdownOpen, setIsPoiDropdownOpen] = useState(false);
 
 
   const getMapStyle = () => {
@@ -124,14 +185,13 @@ const App = () => {
         setMapError(null);
         drawUserMarker(userLoc);
 
-        // Add click handler for map locations
         map.on('click', async (e: any) => {
           const lngLat = e.lngLat;
           const lat = lngLat.lat;
           const lng = lngLat.lng;
 
           try {
-            // Reverse geocode to get address
+
             const reverseGeocode = await services.reverseGeocode({
               key: API_KEY,
               position: [lng, lat]
@@ -139,13 +199,11 @@ const App = () => {
 
             const address = reverseGeocode.addresses?.[0]?.address?.freeformAddress || 'Unknown Location';
 
-            // Get static map image using TomTom's Map Display API for static images
             const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=basic&style=main&center=${lng},${lat}&zoom=16&width=400&height=200&format=png`;
 
             setSelectedLocation({ lat, lng, address, imageUrl });
           } catch (error) {
             console.error('Error fetching location details:', error);
-            // Fallback to simple static map
             const imageUrl = `https://api.tomtom.com/map/1/staticimage?key=${API_KEY}&layer=basic&center=${lng},${lat}&zoom=15&width=400&height=200&format=png`;
             setSelectedLocation({ lat, lng, address: 'Unknown Location', imageUrl });
           }
@@ -197,12 +255,9 @@ const App = () => {
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    // For TomTom, we need to recreate the map to change pitch/style properly
-    // But we can try to animate the camera
     const pitch = mapPerspective === '3d' ? 60 : 0;
     
     try {
-      // Use flyTo with pitch to animate the perspective change
       const center = mapRef.current.getCenter();
       mapRef.current.flyTo({
         center: [center.lng, center.lat],
@@ -218,7 +273,7 @@ const App = () => {
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    // Update map style
+
     const style = getMapStyle();
     
     try {
@@ -229,7 +284,7 @@ const App = () => {
         trafficFlow: 'flow_relative0'
       });
       
-      // Re-add user marker after style change
+
       mapRef.current.once('styledata', () => {
         drawUserMarker(userLoc);
       });
@@ -276,7 +331,7 @@ const App = () => {
       try { mapRef.current.removeSource('route'); } catch (e) {}
     }
     
-    // Only clear POI markers if not preserving them
+
     if (!preservePoi) {
       poiMarkers.forEach(m => m.remove());
       setPoiMarkers([]);
@@ -296,7 +351,7 @@ const App = () => {
     setNavStep(0);
     setShowFullDirections(false);
     
-    // Clear POI markers when starting navigation
+
     poiMarkersRef.current.forEach(m => {
       try { m.remove(); } catch (e) {}
     });
@@ -314,7 +369,7 @@ const App = () => {
           bearing: 0
         });
       } else {
-        // Fallback to destination
+
         mapRef.current.flyTo({
           center: [stats.lng, stats.lat],
           zoom: 17,
@@ -372,7 +427,7 @@ const App = () => {
     }
   };
 
-  const searchPoi = async (categoryId: string, type: string) => {
+  const searchPoi = async (categoryId: string, type: string, icon: string, colorClass: string) => {
     if (!mapRef.current) return;
 
     clearMap();
@@ -384,6 +439,7 @@ const App = () => {
     }
 
     setActivePoiType(type);
+    setIsPoiDropdownOpen(false);
 
     try {
       const res = await services.poiSearch({
@@ -405,13 +461,9 @@ const App = () => {
           const lat = getLat(poi.position)!;
           
           const el = document.createElement('div');
-          let bgClass = 'bg-[#00d4ff]';
-          if (type === 'GAS_STATIONS') bgClass = 'bg-orange-500';
-          else if (type === 'BANKS' || type === 'PARKS') bgClass = 'bg-green-500';
-          else if (type === 'RESTAURANTS') bgClass = 'bg-red-500';
-
-          el.className = `flex items-center justify-center w-8 h-8 ${bgClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
-          el.innerHTML = getPoiIcon(type);
+          
+          el.className = `flex items-center justify-center w-8 h-8 ${colorClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
+          el.innerHTML = icon;
 
           const marker = new tt.Marker({ element: el })
             .setLngLat([lng, lat])
@@ -436,16 +488,6 @@ const App = () => {
       }
     } catch (e) {
       console.error('POI search failed:', e);
-    }
-  };
-
-  const getPoiIcon = (type: string): string => {
-    switch (type) {
-      case 'GAS_STATIONS': return '⛽';
-      case 'BANKS': return '🏦';
-      case 'PARKS': return '🌳';
-      case 'RESTAURANTS': return '🍽️';
-      default: return '📍';
     }
   };
 
@@ -539,8 +581,6 @@ const App = () => {
 
     console.log('calculateRoute called. Current POI markers count:', poiMarkersRef.current.length);
     
-    // Clear all markers including POI markers when navigating to a destination
-    // First remove all POI markers from map using the ref
     const markersToRemove = [...poiMarkersRef.current];
     console.log('Removing', markersToRemove.length, 'POI markers');
     markersToRemove.forEach((m, idx) => {
@@ -552,7 +592,6 @@ const App = () => {
       }
     });
     
-    // Remove all destination markers from map
     const destMarkers = [...markersRef.current];
     console.log('Removing', destMarkers.length, 'destination markers');
     destMarkers.forEach((m, idx) => {
@@ -708,7 +747,7 @@ const App = () => {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'tween', duration:0.30, ease:'easeInOut' }}
-                className="flex overflow-y-auto flex-col pt-10 fixed z-[2000] h-full rounded-r-[20px] shadow-[5px_3px_12px_0.5px_oklch(0.3511_0.0456_303.72)] backdrop-blur-md bg-neutral-900/80 w-[300px] px-5"
+                className="flex overflow-y-auto flex-col pt-10 fixed z-[2000] h-full rounded-r-[20px] shadow-[5px_3px_12px_0.5px_oklch(0.3511_0.0456_303.72)] backdrop-blur-md bg-neutral-900/90 w-[300px] px-5"
               >
                 <button onClick={() => setToggle(false)} className="self-start whitespace-nowrap bg-purple-400 px-3 hover:bg-purple-500 rounded-lg">X</button>
               </motion.div>
@@ -823,21 +862,43 @@ const App = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-2.5">
-              {[
-                { id: POI_CATEGORIES.GAS_STATIONS, type: 'GAS_STATIONS', label: '⛽ Gas' },
-                { id: POI_CATEGORIES.BANKS, type: 'BANKS', label: '🏦 Banks' },
-                { id: POI_CATEGORIES.PARKS, type: 'PARKS', label: '🌳 Parks' },
-                { id: POI_CATEGORIES.RESTAURANTS, type: 'RESTAURANTS', label: '🍽️ Food' }
-              ].map(poi => (
-                <button
-                  key={poi.type}
-                  onClick={() => searchPoi(poi.id, poi.type)}
-                  className={`bg-neutral-900/95 text-gray-300 border border-neutral-800 md:p-3 md:px-2 duration-200 rounded-xl cursor-pointer p-2 px-1 text-[14px] transition-all hover:bg-neutral-800 ${activePoiType === poi.type ? 'bg-[#00d4ff] text-black border-[#00d4ff] hover:bg-[#00d4ff]' : ''}`}
-                >
-                  {poi.label}
-                </button>
-              ))}
+            <div className="relative mt-2.5">
+              <button
+                onClick={() => setIsPoiDropdownOpen(!isPoiDropdownOpen)}
+                className="w-full bg-neutral-900/95 text-white border border-neutral-800 p-3 rounded-xl flex justify-between items-center hover:border-[#00d4ff] transition-colors"
+              >
+                <span className="font-medium">{activePoiType ? `Selected: ${activePoiType.replace('_', ' ')}` : 'Select Category'}</span>
+                <span className={`transition-transform duration-200 ${isPoiDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              
+              <AnimatePresence>
+                {isPoiDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-neutral-900/98 border border-neutral-800 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto z-[2000] shadow-xl scrollbar-hide"
+                  >
+                    {POI_GROUPS.map((group) => (
+                      <div key={group.name}>
+                        <div className={`px-3 py-2 text-xs font-bold text-white ${group.color} bg-opacity-20 border-b border-white/5`}>
+                          {group.name}
+                        </div>
+                        {group.items.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => searchPoi(item.id, item.type, item.icon, group.color)}
+                            className={`w-full text-left px-4 py-3 text-gray-300 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-neutral-800 last:border-none ${activePoiType === item.type ? 'bg-white/5 text-[#00d4ff]' : ''}`}
+                          >
+                            <span className="text-xl">{item.icon}</span>
+                            <span className="text-sm">{item.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
