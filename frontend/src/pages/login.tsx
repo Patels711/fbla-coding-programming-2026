@@ -26,7 +26,7 @@ const Login = () => {
 			if (response.ok) {
 				const data = await response.json();
 				console.log('Successful Login:', data);
-				navigate('/profile');
+				navigate('/dashboard');
 			} else {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('Failed Login:', response.statusText);

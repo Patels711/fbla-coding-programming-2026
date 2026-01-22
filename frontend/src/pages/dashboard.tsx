@@ -1,16 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {dimensionValueTypes, motion} from "framer-motion";
+import {motion} from "framer-motion";
 import Card from "../components/card";
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/navbar';
+import Links from '../components/links';
 
-const Profile=()=>{
+const Dashboard=()=>{
     const [user, setUser] = useState<{uid: number, username: string} | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await fetch('http://localhost:5174/auth/profile', {
+                const response = await fetch('http://localhost:5174/auth/dashboard', {
                     credentials: 'include'
                 });
                 if (response.ok) {
@@ -39,6 +41,11 @@ const Profile=()=>{
                     <div className="absolute lg:top-[-520px] top-[-420px] w-full h-full bg-linear-to-b from-cyan-700/40 via-cyan-500/40 to-purple-400/40 blur-[120px] rounded-full" />
                 </motion.div>
             </div>
+            <Navbar page="Profile">
+                <Links link="map">
+                    Map 🗺️ →
+                </Links>
+            </Navbar>
             <div className="w-full relative grid gap-8 pt-10">
                 <Card title="Profile" titleClassName=' text-cyan-500'>
                     <h1 className="text-xl">Welcome {user.username}!</h1>
@@ -50,4 +57,4 @@ const Profile=()=>{
     )
 };
 
-export default Profile
+export default Dashboard;

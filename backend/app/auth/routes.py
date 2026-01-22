@@ -45,7 +45,7 @@ def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
-@auth_bp.route('/profile', methods=['GET'])
+@auth_bp.route('/dashboard', methods=['GET'])
 @login_required
 def profile():
     return jsonify({

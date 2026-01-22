@@ -4,7 +4,7 @@ import Landing from "./pages/loading";
 import Home from "./pages/home";
 import Map from "./pages/map";
 import Register from "./pages/register";
-import Profile from "./pages/profile";
+import Dashboard from "./pages/dashboard";
 
 
 
@@ -17,7 +17,7 @@ function App() {
 				<Route path="/loading" element={<Landing />} />
 				<Route path="/" element={<Home />} />
 				<Route path="/map" element={<Map />} />
-				<Route path="/profile" element={<Profile />} />
+				<Route path="/dashboard" element={<Dashboard />} />
 			</Routes>
 		</BrowserRouter>
 	);

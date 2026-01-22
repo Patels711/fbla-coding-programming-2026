@@ -3,7 +3,7 @@ import tt from '@tomtom-international/web-sdk-maps';
 import { services } from '@tomtom-international/web-sdk-services';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import Navbar from '../components/navbar';
 
 
 
@@ -46,7 +46,6 @@ const POI_GROUPS = [
     items: [
       { id: '7328', type: 'BANK', label: 'Bank', icon: '🏦' },
       { id: '7397', type: 'ATM', label: 'ATM', icon: '🏧' },
-      { id: '7326', type: 'PHARMACY', label: 'Pharmacy', icon: '💊' },
     ]
   },
   {
@@ -55,7 +54,8 @@ const POI_GROUPS = [
     items: [
       { id: '7321', type: 'HOSPITAL', label: 'Hospital', icon: '🏥' },
       { id: '9373', type: 'DOCTOR', label: 'Doctor', icon: '👨‍⚕️' },
-      { id: '9374', type: 'DENTIST', label: 'Dentist', icon: '🦷' }
+      { id: '9374', type: 'DENTIST', label: 'Dentist', icon: '🦷' },
+      { id: '7326', type: 'PHARMACY', label: 'Pharmacy', icon: '💊' },
     ]
   },
   {
@@ -136,7 +136,7 @@ const App = () => {
   const [navStep, setNavStep] = useState(0);
   const [showFullDirections, setShowFullDirections] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string, imageUrl: string} | null>(null);
-  const [mapStyle, setMapStyle] = useState<'regular' | 'satellite' | 'dark' | 'hybrid'>('regular');
+  const [mapStyle, setMapStyle] = useState<'regular' | 'satellite' | 'dark' | 'hybrid'>('dark');
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isPoiDropdownOpen, setIsPoiDropdownOpen] = useState(false);
@@ -742,19 +742,9 @@ const App = () => {
         <div ref={mapElement} className="w-full h-full relative [&_.tt-attribution]:hidden">
           
           {/*hiding sidebar*/}
-          <AnimatePresence>
-            {isToggled && (
-              <motion.div
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: 'tween', duration:0.30, ease:'easeInOut' }}
-                className="flex overflow-y-auto flex-col pt-10 fixed z-[2000] h-full rounded-r-[20px] shadow-[5px_3px_12px_0.5px_oklch(0.3511_0.0456_303.72)] backdrop-blur-md bg-neutral-900/90 w-[300px] px-5"
-              >
-                <button onClick={() => setToggle(false)} className="self-start whitespace-nowrap bg-purple-400 px-3 hover:bg-purple-500 rounded-lg">X</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <Navbar page="Map">
+
+          </Navbar>        
          
           {/*Animation for loading map*/}
           {!mapLoaded && !mapError && (
@@ -836,7 +826,7 @@ const App = () => {
           )}
 
           {/* Search Overlay */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[300px] duration-200 transition-all ease-in-out md:max-w-[500px] z-[1000]">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 translate-y-20 w-[90%] max-w-[300px] duration-200 transition-all ease-in-out md:max-w-[500px] z-[1000]">
             <div className="bg-neutral-900/95 border border-neutral-800 rounded-xl overflow-hidden shadow-lg">
               <div className="flex items-center p-2 px-3 gap-2">
                 <input
@@ -952,7 +942,7 @@ const App = () => {
           )}
 
           {/* Side Bar */}
-          <div className={`absolute top-1/2 -translate-y-1/2 ${isToggled?'hidden':''} items-center left-4 flex flex-col gap-3 z-[1000]`}>
+          <div className={`absolute translate-y-85 ${isToggled?'hidden':''} items-center left-4 flex flex-col gap-3 z-[1000]`}>
             <button 
               onClick={() => setToggle(!isToggled)}
               className="w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 pb-1 rounded-xl cursor-pointer text-xl items-center justify-center font-bold tracking-wide flex flex-col shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff]"

@@ -38,7 +38,7 @@ const Register = () => {
 			if (response.ok) {
 				const data = await response.json();
 				console.log('Account Created:', data);
-				navigate('/profile');
+				navigate('/dashboard');
 			} else {
 				const errorData = await response.json();
 				setSubmitError(errorData.message || 'Failed to create account.');
