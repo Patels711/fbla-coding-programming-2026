@@ -461,9 +461,11 @@ const App = () => {
           const lat = getLat(poi.position)!;
           
           const el = document.createElement('div');
+          const innerEl = document.createElement('div');
           
-          el.className = `flex items-center justify-center w-8 h-8 ${colorClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
-          el.innerHTML = icon;
+          innerEl.className = `flex items-center justify-center w-8 h-8 ${colorClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
+          innerEl.innerHTML = icon;
+          el.appendChild(innerEl);
 
           const marker = new tt.Marker({ element: el })
             .setLngLat([lng, lat])
