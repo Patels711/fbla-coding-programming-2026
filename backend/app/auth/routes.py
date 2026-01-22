@@ -21,7 +21,7 @@ def register():
 
         login_user(new_user)
 
-        return redirect(url_for('auth.profile'))
+        return jsonify({'message': 'Account created successfully'}), 201
 
     return render_template('register.html')
 
@@ -34,7 +34,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user)
-            return redirect(url_for('auth.profile'))
+            return jsonify({'message': 'Login successful'}), 200
         else:
             return jsonify({'message': 'Invalid username or password'}), 401
 

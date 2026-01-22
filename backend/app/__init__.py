@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from app.extensions import db, bcrypt
@@ -9,10 +10,18 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app, supports_credentials=True)
     from app.models import User
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    
+    basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    instance_path = os.path.join(basedir, 'instance')
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'db.sqlite3')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
 
     db.init_app(app)
     bcrypt.init_app(app)
@@ -28,6 +37,9 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
     Migrate(app, db)
+
+    with app.app_context():
+        db.create_all()
 
     @app.route('/')
     def index():
