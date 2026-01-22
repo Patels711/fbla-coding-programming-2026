@@ -1,0 +1,33 @@
+import {Link} from 'react-router-dom';
+import React from 'react';
+
+interface LinkProps {
+    title?: React.ReactNode;
+    children?: React.ReactNode;
+    link?: string;
+    className?: string;
+    linkClassName?: string;
+    titleClassName?: string;
+}
+
+const Links: React.FC<LinkProps> = ({ title, children, link = "", className = "", linkClassName = "", titleClassName = ""}) => {
+    return (
+        <div className={`relative z-10 flex justify-center ${className}`}>
+            <Link to={link.startsWith('/') ? link : `/${link}`} className={`${linkClassName} pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md mr-2`}>
+                        {title ? (
+                            typeof title === 'string' ? (
+                            <h1 className={`text-4xl md:text-4xl font-bold text-[#406386] ${titleClassName}`}>
+                                {title}
+                            </h1>
+                        ) : (
+                            <div className={titleClassName}>
+                                {title}
+                            </div>
+                        )
+                        ) : children}
+            </Link>
+        </div>
+    );
+}
+
+export default Links;

@@ -1,35 +1,39 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
+	const [submitError, setSubmitError] = useState('');
+	const navigate = useNavigate();
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const url = 'https://url'; //this is going to be where u add it eli from env file
-		const payload = {
-			userName: username,
-			password: password
-		};
+		setSubmitError('');
+		const url = 'http://localhost:5174/auth/login';
+		
+		const formData = new FormData();
+		formData.append('username', username);
+		formData.append('password', password);
 
 		try {
 			const response = await fetch(url, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-					//add token if needed
-				},
-				body: JSON.stringify(payload)
+				body: formData,
+				credentials: 'include'
 			});
 			if (response.ok) {
 				const data = await response.json();
 				console.log('Successful Login:', data);
+				navigate('/profile');
 			} else {
+				const errorData = await response.json().catch(() => ({}));
 				console.error('Failed Login:', response.statusText);
+				setSubmitError(errorData.message || 'Login failed');
 			}
 		} catch (error) {
+			setSubmitError('Network error occurred.');
 			console.error('Network error:', error);
 		}
 	};
@@ -83,6 +87,7 @@ const Login = () => {
 							onChange={(e) => setPassword(e.target.value)}
 						/>
 					</div>
+					{submitError && <p className="text-red-400 text-sm text-center">{submitError}</p>}
 
 					<button
 						type="submit"
@@ -92,7 +97,7 @@ const Login = () => {
 					</button>
 					<Link to="/">
 						<button type="button" className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg">
-							Back To Home
+							← Back
 						</button>
 					</Link>
 				</form>

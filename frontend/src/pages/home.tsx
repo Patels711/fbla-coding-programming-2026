@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
+import Links from '../components/links';
+import Navbar from '../components/navbar';
 
 const Home = () => {
-	const { scrollY } = useScroll();
-	const width = useTransform(scrollY, [0, 100], ["100%", "98%"]);
-	const borderRadius = useTransform(scrollY, [0, 100], ["0px", "40px"]);
-	const marginTop = useTransform(scrollY, [0, 100], ["0px", "12px"]);
-	const bgColor = useTransform(scrollY, [0, 100], ["rgba(23, 23, 23, 1)", "rgba(30, 30, 30, 0.7)"]);
 	return (
 		<div className="min-h-screen bg-neutral-900 relative w-full overscroll-none">
 
@@ -19,29 +16,14 @@ const Home = () => {
 				</motion.div>
 			</div>
 
-			<div className="fixed z-50 min-w-screen pointer-events-none flex justify-center">
-				<motion.div style={{ width, borderRadius, marginTop, backgroundColor: bgColor }} className="px-8 flex items-center justify-between shadow-neutral-700 backdrop-blur-md pointer-events-auto shadow-md">
-					<nav className="py-5 px-5 w-full flex justify-between items-center">
-						<Link
-							to="/"
-							className="pointer-events-auto px-3 py-1 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition-all text-md"
-						>
-							← Back
-						</Link>
-						<span className="bg-linear-to-l from-cyan-700 via-cyan-500 to-purple-400 bg-clip-text text-transparent font-bold tracking-widest text-sm md:text-lg">
-							FBLA Project 25-26
-						</span>
-						<div className="flex space-x-2">
-							<Link to="/login" className="pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md mr-2 ">
-								Login →
-							</Link>
-							<Link to="/register" className="pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md">
-								Register →
-							</Link>
-						</div>
-					</nav>
-				</motion.div>
-			</div>
+			<Navbar page="FBLA Project 25-26">
+				<Links link="/login">
+					Login →
+				</Links>
+				<Links link="/register">
+					Register →
+				</Links>
+			</Navbar>
 
 			<div className="relative z-10 flex flex-col items-center gap-8 pt-32 pb-20">
 				<div className="bg-neutral-800/60 p-16 rounded-3xl w-full max-w-2xl border border-white/5 backdrop-blur-sm">
@@ -69,12 +51,6 @@ const Home = () => {
 					<h1 className="text-neutral-500 text-4xl">Content 06</h1>
 				</div> {/*hoveringbar*/}
 				<div className="relative z-10 flex flex-col items-center gap-8">
-				<Link 
-					to="/app" 
-					className="px-8 py-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-lg hover:shadow-cyan-500/50 transition-all duration-200 hover:scale-105"
-				>
-					🗺️ Open Map
-				</Link>
 			</div>
 			</div>
 			<div className="relative z-10 flex flex-col items-center gap-8 pt-15 pb-20">

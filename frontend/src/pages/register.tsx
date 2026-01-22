@@ -1,44 +1,51 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Register = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
+	const [submitError, setSubmitError] = useState('');
+	const navigate = useNavigate();
+
+	const isPasswordValid = password.length >= 8 && /\d/.test(password) && /[a-zA-Z]/.test(password);
+	const doPasswordsMatch = password === confirmPassword;
 
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const url = 'https://url';
-		if (password !== confirmPassword) {
-			alert('Passwords do not match');
-			console.error('Passwords do not match');
+		setSubmitError('');
+		const url = 'http://localhost:5174/auth/register';
+		if (!doPasswordsMatch) {
 			return;
 		}
-		const payload = {
-			userName: username,
-			password: password
-		};
+		
+		// Password strength check
+		if (!isPasswordValid) {
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('username', username);
+		formData.append('password', password);
 
 		try {
 			const response = await fetch(url, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-					//add token if needed
-				},
-				body: JSON.stringify(payload)
+				body: formData,
+				credentials: 'include'
 			});
 			if (response.ok) {
 				const data = await response.json();
-				alert('Account created successfully!');
 				console.log('Account Created:', data);
+				navigate('/profile');
 			} else {
-				alert('Failed to create account.');
+				const errorData = await response.json();
+				setSubmitError(errorData.message || 'Failed to create account.');
 				console.error('Failed to create account:', response.statusText);
 			}
 		} catch (error) {
-			alert('Network error occurred.');
+			setSubmitError('Network error occurred.');
 			console.error('Network error:', error);
 		}
 	};
@@ -91,6 +98,11 @@ const Register = () => {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 						/>
+						{password && (
+							<p className={`text-xs mt-1 ${isPasswordValid ? 'text-green-400' : 'text-red-400'}`}>
+								{isPasswordValid ? 'Strong password' : 'Password must be at least 8 characters long and contain both letters and numbers.'}
+							</p>
+						)}
 					</div>
 					<div>
 						<label className="block text-sm font-medium text-white">Confirm Password</label>
@@ -101,7 +113,13 @@ const Register = () => {
 							value={confirmPassword}
 							onChange={(e) => setConfirmPassword(e.target.value)}
 						/>
+						{confirmPassword && (
+							<p className={`text-xs mt-1 ${doPasswordsMatch ? 'text-green-400' : 'text-red-400'}`}>
+								{doPasswordsMatch ? 'Passwords match' : 'Passwords do not match'}
+							</p>
+						)}
 					</div>
+					{submitError && <p className="text-red-400 text-sm text-center">{submitError}</p>}
 					<button
 						type="submit"
 						className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg  mb-3"
@@ -110,7 +128,7 @@ const Register = () => {
 					</button>
 					<Link to="/">
 						<button type="button" className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg">
-							Back To Home
+						← Back
 						</button>
 					</Link>
 				</form>
