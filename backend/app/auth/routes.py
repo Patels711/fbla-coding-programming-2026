@@ -4,6 +4,7 @@ from app.models import User
 from app.extensions import bcrypt
 from app import db
 from flask_login import login_user, logout_user, current_user, login_required
+import os
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -15,6 +16,7 @@ def register():
         if User.query.filter_by(username=username).first():
             return jsonify({'message': 'Username already exists'}), 400
 
+        profile_picture = None
         if image:
             ext = os.path.splitext(image)[1]
             random_filename = f"{os.urandom(16).hex()}{ext}"
@@ -23,7 +25,7 @@ def register():
             
             image_path = os.path.join('static/profile_pictures', random_filename)
             with open(image_path, 'wb') as f:
-                f.write(image.read())
+                f.write(image.encode('latin1'))
         else:
             profile_picture = 'default_profile_picture.png'
 
