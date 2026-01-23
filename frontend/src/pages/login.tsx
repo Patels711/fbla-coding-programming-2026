@@ -38,8 +38,26 @@ const Login = () => {
 				<form className="mt-8 space-y-6"
 					onSubmit={async (e) => {
 						e.preventDefault();
-						const res = await fetch("/auth/login", { method: "POST" });
-						if (res.ok) window.location.href = "/dashboard";
+						setSubmitError('');
+						const formData = new FormData();
+						formData.append('username', username);
+						formData.append('password', password);
+
+						try {
+							const res = await fetch("http://localhost:5174/auth/login", {
+								method: "POST",
+								body: formData,
+								credentials: 'include'
+							});
+							if (res.ok) {
+								navigate('/dashboard');
+							} else {
+								const data = await res.json();
+								setSubmitError(data.message || 'Login failed');
+							}
+						} catch (error) {
+							setSubmitError('Network error');
+						}
 					}}>
 					<div>
 						<label className="block text-sm font-medium text-white">Username:</label>

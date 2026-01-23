@@ -10,11 +10,15 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+<<<<<<< HEAD
     CORS(app, 
          supports_credentials=True, 
          origins=["http://localhost:5173"],
          allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+=======
+    CORS(app, supports_credentials=True, origins="http://localhost:5173")
+>>>>>>> 229f384 (changes)
     from app.models import User
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
     

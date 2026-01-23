@@ -3,13 +3,16 @@ import tt from '@tomtom-international/web-sdk-maps';
 import { services } from '@tomtom-international/web-sdk-services';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
+import Links from '../components/links';
+import {House} from 'lucide-react';
 
 
 
 
 
-const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
+const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY;
 
 const POI_GROUPS = [
   {
@@ -117,9 +120,9 @@ interface RouteInfo {
   currentInstruction: number;
 }
 
-const App = () => {
-  const[isToggled, setToggle]=useState<boolean>(false);
+const Map = () => {
   const mapElement = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<{uid: number, username: string} | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const poiMarkersRef = useRef<any[]>([]);
@@ -140,7 +143,7 @@ const App = () => {
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isPoiDropdownOpen, setIsPoiDropdownOpen] = useState(false);
-
+  const navigate = useNavigate();
 
   const getMapStyle = () => {
     switch (mapStyle) {
@@ -245,7 +248,7 @@ const App = () => {
     
     const el = document.createElement('div');
     el.className = 'user-dot';
-    el.innerHTML = '<div class="w-4 h-4 bg-[#00d4ff] border-[3px] border-white rounded-full shadow-[0_0_15px_#00d4ff]"></div>';
+    el.innerHTML = '<div class="w-5 h-5 bg-[#00d4ff] border-[4px] border-white rounded-full shadow-[0_0_15px_#00d4ff]"></div>';
     
     userMarkerRef.current = new tt.Marker({ element: el })
       .setLngLat([loc.lng, loc.lat])
@@ -463,7 +466,7 @@ const App = () => {
           const el = document.createElement('div');
           const innerEl = document.createElement('div');
           
-          innerEl.className = `flex items-center justify-center w-8 h-8 ${colorClass} border-[3px] border-white rounded-full text-base cursor-pointer shadow-md transition-transform hover:scale-125`;
+          innerEl.className = `flex items-center justify-center w-8 h-8 ${colorClass} border-[3px] border-white rounded-full text-sm cursor-pointer shadow-md transition-transform hover:scale-125`;
           innerEl.innerHTML = icon;
           el.appendChild(innerEl);
 
@@ -739,11 +742,13 @@ const App = () => {
 
   return (
     <div className="fixed inset-0 bg-neutral-900">
-        <div ref={mapElement} className="w-full h-full relative [&_.tt-attribution]:hidden">
+        <div ref={mapElement} className="w-full h-full relative [&_.tt-attribution]:hidden te">
           
           {/*hiding sidebar*/}
-          <Navbar page="Map">
-
+          <Navbar page={`Map`}>
+             <Links link="dashboard">
+              Dashboard <House size={17} />
+            </Links>
           </Navbar>        
          
           {/*Animation for loading map*/}
@@ -775,10 +780,10 @@ const App = () => {
           {isNavigating && stats && stats.instructions && stats.instructions.length > 0 && (
             <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-neutral-900/98 border border-neutral-800 rounded-2xl w-80 z-[2000] shadow-2xl max-h-[50vh] overflow-hidden">
               <div className="flex justify-between items-center p-3 px-4 border-b border-neutral-800">
-                <div className="flex items-center text-white gap-2.5 text-base">
+                <div className="flex items-center text-white gap-2.5 text-sm">
                   <span className="text-2xl">📍</span>
                   <div>
-                    <h4 className="m-0 text-[#00d4ff] text-sm">{stats.name}</h4>
+                    <h4 className="m-0 text-[#00d4ff] text-md">{stats.name}</h4>
                     <p className="m-0 mt-0.5 text-gray-400 text-[11px]">{stats.miles} mi • {stats.mins} min</p>
                   </div>
                 </div>
@@ -813,7 +818,7 @@ const App = () => {
                       className={`flex items-center gap-2.5 p-2.5 px-4 cursor-pointer border-b border-neutral-800 hover:bg-white/5 ${idx === navStep ? 'bg-[#00d4ff26] border-l-[3px] border-l-[#00d4ff]' : ''} ${idx < navStep ? 'opacity-50' : ''}`}
                       onClick={() => jumpToStep(idx)}
                     >
-                      <span className="text-base w-5 text-center">{getManeuverIcon(inst.maneuverType)}</span>
+                      <span className="text-sm w-5 text-center">{getManeuverIcon(inst.maneuverType)}</span>
                       <div className="flex-1 flex justify-between items-center">
                         <span className="text-white text-xs">{inst.streetName || inst.message}</span>
                         <span className="text-gray-400 text-[11px]">{formatDistance(inst.distance)}</span>
@@ -830,7 +835,7 @@ const App = () => {
             <div className="bg-neutral-900/95 border border-neutral-800 rounded-xl overflow-hidden shadow-lg">
               <div className="flex items-center p-2 px-3 gap-2">
                 <input
-                  className="flex-1 border-none bg-transparent text-white text-[15px] outline-none placeholder-neutral-500"
+                  className="flex-1 border-none bg-transparent text-white text-sm outline-none placeholder-neutral-500"
                   placeholder="Search location..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
@@ -846,20 +851,20 @@ const App = () => {
                 <div className="bg-neutral-900/95 border-t border-neutral-800 max-h-[180px] overflow-y-auto scrollbar-hide">
                   {suggestions.map((s, i) => (
                    <div key={i} className="p-3 border-b border-neutral-800 hover:bg-neutral-800" onClick={() => handleSelectSuggestion(s)}>
-                   <strong className="text-white block text-md">{s.poi?.name || s.address?.freeformAddress || 'Unknown'}</strong>
-                   <span className="text-gray-400 text-md">{s.address?.municipality || ''}</span>
+                   <strong className="text-white block text-sm">{s.poi?.name || s.address?.freeformAddress || 'Unknown'}</strong>
+                   <span className="text-gray-400 text-sm">{s.address?.municipality || ''}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="relative mt-2.5">
+            <div className="relative mt-2.5 text-[14px]">
               <button
                 onClick={() => setIsPoiDropdownOpen(!isPoiDropdownOpen)}
                 className="w-full bg-neutral-900/95 text-white border border-neutral-800 p-3 rounded-xl flex justify-between items-center hover:border-[#00d4ff] transition-colors"
               >
-                <span className="font-medium">{activePoiType ? `Selected: ${activePoiType.replace('_', ' ')}` : 'Select Category'}</span>
+                <span className="font-large">{activePoiType ? `Selected: ${activePoiType.replace('_', ' ')}` : 'Select Category'}</span>
                 <span className={`transition-transform duration-200 ${isPoiDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
               </button>
               
@@ -898,7 +903,7 @@ const App = () => {
           {stats && !isNavigating && (
             <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-neutral-900/95 border border-neutral-800 p-4 rounded-2xl w-[300px] z-[1000] shadow-xl">
               <div className="mb-3">
-                <h3 className="m-0 mb-1 text-[#00d4ff] text-base">{stats.name}</h3>
+                <h3 className="m-0 mb-1 text-[#00d4ff] text-sm">{stats.name}</h3>
                 <p className="m-0 mb-3 text-gray-400 text-sm">{stats.miles} mi • {stats.mins} min</p>
               </div>
               <div className="flex gap-2.5">
@@ -913,7 +918,7 @@ const App = () => {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-900/98 border border-neutral-800 rounded-2xl w-80 z-[3000] shadow-2xl max-h-[80vh] overflow-hidden">
               <div className="flex justify-between items-center p-4 border-b border-neutral-800">
                 <h3 className="m-0 text-[#00d4ff] text-lg">Location Details</h3>
-                <button className="bg-neutral-800 border-none text-white w-8 h-8 rounded-full cursor-pointer text-base hover:bg-neutral-700" onClick={() => setSelectedLocation(null)}>✕</button>
+                <button className="bg-neutral-800 border-none text-white w-8 h-8 rounded-full cursor-pointer text-sm hover:bg-neutral-700" onClick={() => setSelectedLocation(null)}>✕</button>
               </div>
               <div className="p-4">
                 {selectedLocation.imageUrl && (
@@ -942,13 +947,7 @@ const App = () => {
           )}
 
           {/* Side Bar */}
-          <div className={`absolute translate-y-85 ${isToggled?'hidden':''} items-center left-4 flex flex-col gap-3 z-[1000]`}>
-            <button 
-              onClick={() => setToggle(!isToggled)}
-              className="w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 pb-1 rounded-xl cursor-pointer text-xl items-center justify-center font-bold tracking-wide flex flex-col shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff]"
-              title="My Location"
-            >☰
-            </button>
+          <div className={`absolute translate-y-85 items-center left-4 flex flex-col gap-3 z-[1000] text-[14px]`}>
             <button 
               onClick={() => {
                 if (!mapRef.current) return;
@@ -972,7 +971,7 @@ const App = () => {
                   mapRef.current.flyTo({ center: [userLoc.lng, userLoc.lat], zoom: 15 });
                 }
               }}
-              className="w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff]"
+              className="text-[14px] w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-[22px] flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff]"
               title="My Location"
             >
               📍
@@ -981,10 +980,10 @@ const App = () => {
               onClick={() => {
                 setMapPerspective(prev => prev === '2d' ? '3d' : '2d');
               }}
-              className={`w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-md flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapPerspective === '3d' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
+              className={`text-[14px] w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-sm flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapPerspective === '3d' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
               title={mapPerspective === '2d' ? 'Switch to 3D View' : 'Switch to 2D View'}
             >
-              <span className="text-md font-bold tracking-wide">{mapPerspective === '2d' ? '2D' : '3D'}</span>
+              <span className="text-[14px] font-bold tracking-wide">{mapPerspective === '2d' ? '2D' : '3D'}</span>
             </button>
             <button
               onClick={() => {
@@ -995,10 +994,10 @@ const App = () => {
                   return styles[nextIndex] as 'regular' | 'satellite' | 'dark' | 'hybrid';
                 });
               }}
-              className={`w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-md flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapStyle !== 'regular' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
+              className={`w-[55px] h-[40px] md:w-[60px] md:h-[50px] bg-neutral-900/95 text-white border border-neutral-800 rounded-xl cursor-pointer text-sm flex flex-col items-center justify-center shadow-lg transition-all hover:scale-105 hover:border-[#00d4ff] ${mapStyle !== 'regular' ? 'border-[#00d4ff] text-[#00d4ff] bg-[#00d4ff1a]' : ''}`}
               title={`Current: ${mapStyle}`}
             >
-              <span className="text-md font-bold tracking-wide">{mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}</span>
+              <span className="text-sm font-bold tracking-wide">{mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}</span>
             </button>
           </div>
         </div>
@@ -1006,4 +1005,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Map;
