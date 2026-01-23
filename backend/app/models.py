@@ -38,7 +38,7 @@ class Review(db.Model):
 
 class Location(db.Model):
     lid = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=True)
+    name = db.Column(db.String(150), nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     type = db.Column(db.Integer, nullable=False)
