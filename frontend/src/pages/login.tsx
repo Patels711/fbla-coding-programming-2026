@@ -38,8 +38,30 @@ const Login = () => {
 				<form className="mt-8 space-y-6"
 					onSubmit={async (e) => {
 						e.preventDefault();
-						const res = await fetch("/auth/login", { method: "POST" });
-						if (res.ok) window.location.href = "/dashboard";
+						setSubmitError('');
+
+						const formData = new FormData();
+						formData.append('username', username);
+						formData.append('password', password);
+
+						try {
+							const res = await fetch("http://localhost:5174/auth/login", { 
+								method: "POST",
+								credentials: 'include',
+								body: formData 
+							});
+
+							const data = await res.json();
+
+							if (res.ok) {
+								navigate("/dashboard");
+							} else {
+								setSubmitError(data.message || 'Login failed');
+							}
+						} catch (err) {
+							setSubmitError('Server connection failed');
+							console.error(err);
+						}
 					}}>
 					<div>
 						<label className="block text-sm font-medium text-white">Username:</label>
