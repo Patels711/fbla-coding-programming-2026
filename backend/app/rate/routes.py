@@ -3,6 +3,45 @@ from . import rate_bp
 from app.models import User
 from app import db
 
-@rate_bp.route('/test', methods=['GET'])
-def test_route():
-    return jsonify({'message': 'Rate blueprint is working!'}), 200
+@rate_bp.route('/rate/<int:user_id>', methods=['GET'])
+def get_user_rating(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    return jsonify({'username': user.username, 'rating': user.rating}), 200
+
+@rate_bp.route('/rate/<int:location_id>', methods=['GET'])
+def get_location_rating(location_id):
+    from app.models import Location
+    location = Location.query.get(location_id)
+    if not location:
+        return jsonify({'message': 'Location not found'}), 404
+
+    reviews = location.reviews
+    if not reviews:
+        return jsonify({'location': location.name, 'average_rating': None}), 200
+
+    average_rating = sum(review.star_rating for review in reviews) / len(reviews)
+    return jsonify({'location': location.name, 'average_rating': average_rating}), 200
+
+@rate_bp.route('/rate/review', methods=['POST'])
+def submit_review():
+    from app.models import Review, Location
+    data = request.get_json()
+    user_id = data.get('user_id')
+    location_id = data.get('location_id')
+    star_rating = data.get('star_rating')
+    content = data.get('content', '')
+
+    user = User.query.get(user_id)
+    location = Location.query.get(location_id)
+
+    if not user or not location:
+        return jsonify({'message': 'User or Location not found'}), 404
+
+    new_review = Review(user_id=user_id, location_id=location_id, star_rating=star_rating, content=content)
+    db.session.add(new_review)
+    db.session.commit()
+
+    return jsonify({'message': 'Review submitted successfully'}), 201
