@@ -1,19 +1,27 @@
 from flask import request, jsonify, render_template, url_for, redirect
 from . import rate_bp
-from app.models import User
+from app.models import User, Review, Location
 from app import db
 
-@rate_bp.route('/rate/<int:user_id>', methods=['GET'])
-def get_user_rating(user_id):
+@rate_bp.route('/user/<int:user_id>', methods=['GET'])
+def get_user_ratings(user_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({'message': 'User not found'}), 404
 
-    return jsonify({'username': user.username, 'rating': user.rating}), 200
+    reviews = user.reviews
+    ratings = []
+    for review in reviews:
+        ratings.append({
+            'location_id': review.location_id,
+            'location_name': review.location.name,
+            'star_rating': review.star_rating,
+            'content': review.content
+        })
+    return jsonify({'user': user.username, 'ratings': ratings}), 200
 
-@rate_bp.route('/rate/<int:location_id>', methods=['GET'])
-def get_location_rating(location_id):
-    from app.models import Location
+@rate_bp.route('/loc/<int:location_id>', methods=['GET'])
+def get_location_ratings(location_id):
     location = Location.query.get(location_id)
     if not location:
         return jsonify({'message': 'Location not found'}), 404
@@ -25,9 +33,25 @@ def get_location_rating(location_id):
     average_rating = sum(review.star_rating for review in reviews) / len(reviews)
     return jsonify({'location': location.name, 'average_rating': average_rating}), 200
 
-@rate_bp.route('/rate/review', methods=['POST'])
+@rate_bp.route('/loc/<int:location_id>/reviews', methods=['GET'])
+def get_location_reviews(location_id):
+    location = Location.query.get(location_id)
+    if not location:
+        return jsonify({'message': 'Location not found'}), 404
+
+    reviews = location.reviews
+    reviews_data = []
+    for review in reviews:
+        reviews_data.append({
+            'user_id': review.user_id,
+            'username': review.user.username,
+            'star_rating': review.star_rating,
+            'content': review.content
+        })
+    return jsonify({'location': location.name, 'reviews': reviews_data}), 200
+
+@rate_bp.route('/review', methods=['POST'])
 def submit_review():
-    from app.models import Review, Location
     data = request.get_json()
     user_id = data.get('user_id')
     location_id = data.get('location_id')
