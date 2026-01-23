@@ -12,3 +12,14 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class Review(db.Model):
+    rid = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
+    star_rating = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text, nullable=True)
+
+    user = db.relationship('User', backref=db.backref('reviews', lazy=True))
+
+    def __repr__(self):
+        return f'<Review {self.id} by User {self.user_id}>'
