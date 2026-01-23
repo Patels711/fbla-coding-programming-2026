@@ -6,6 +6,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     profile_picture = db.Column(db.String(256), nullable=True)
+    reviews = db.relationship('Review', back_populates='user', lazy=True)
 
     def get_id(self):
         return str(self.uid)
@@ -15,11 +16,10 @@ class User(db.Model, UserMixin):
 
 class Review(db.Model):
     rid = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
     star_rating = db.Column(db.Integer, nullable=False)
     content = db.Column(db.Text, nullable=True)
-
-    user = db.relationship('User', backref=db.backref('reviews', lazy=True))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
+    user = db.relationship('User', back_populates='reviews', lazy=True)
 
     def __repr__(self):
         return f'<Review {self.id} by User {self.user_id}>'
