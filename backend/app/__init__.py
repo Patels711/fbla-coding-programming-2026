@@ -34,7 +34,9 @@ def create_app():
         return User.query.get(uid)
 
     from app.auth import auth_bp
+    from app.rate import rate_bp 
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(rate_bp, url_prefix='/rate')
 
     Migrate(app, db)
 
