@@ -8,36 +8,6 @@ const Login = () => {
 	const [submitError, setSubmitError] = useState('');
 	const navigate = useNavigate();
 
-	const handleLogin = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setSubmitError('');
-		const url = 'http://localhost:5174/auth/login';
-		
-		const formData = new FormData();
-		formData.append('username', username);
-		formData.append('password', password);
-
-		try {
-			const response = await fetch(url, {
-				method: 'POST',
-				body: formData,
-				credentials: 'include'
-			});
-			if (response.ok) {
-				const data = await response.json();
-				console.log('Successful Login:', data);
-				navigate('/dashboard');
-			} else {
-				const errorData = await response.json().catch(() => ({}));
-				console.error('Failed Login:', response.statusText);
-				setSubmitError(errorData.message || 'Login failed');
-			}
-		} catch (error) {
-			setSubmitError('Network error occurred.');
-			console.error('Network error:', error);
-		}
-	};
-
 	return (
 		<div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
 			<div className="fixed inset-0 backdrop-blur-[400px] -z-10">
@@ -65,7 +35,12 @@ const Login = () => {
 					<p className="mt-2 text-slate-200">Login</p>
 				</div>
 
-				<form className="mt-8 space-y-6" onSubmit={handleLogin}>
+				<form className="mt-8 space-y-6"
+					onSubmit={async (e) => {
+						e.preventDefault();
+						const res = await fetch("/auth/login", { method: "POST" });
+						if (res.ok) window.location.href = "/dashboard";
+					}}>
 					<div>
 						<label className="block text-sm font-medium text-white">Username:</label>
 						<input
@@ -88,7 +63,6 @@ const Login = () => {
 						/>
 					</div>
 					{submitError && <p className="text-red-400 text-sm text-center">{submitError}</p>}
-
 					<button
 						type="submit"
 						className="w-full rounded-lg bg-sky-500 py-3 font-semibold text-white hover:bg-sky-400 active:scale-[0.98] transition-all shadow-lg mb-3"
