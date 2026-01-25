@@ -3,9 +3,11 @@ from . import recc_bp
 from app.models import User, Review, Location
 from app import db
 from app.recc.categories import CATEGORY_MAPPING
+from flask_login import login_required, current_user
 import requests
 import os
 import unicodedata
+import math
 
 tomtom_api_key = os.getenv('TOMTOM_API_KEY')
 
@@ -68,6 +70,29 @@ def get_location_vector(tomtom_poi):
 
     return vector
 
+def calculate_relevance(user_prefs, location_vector):
+    all_keys = set(user_prefs.keys()).union(set(location_vector.keys()))
+
+    dot_product = 0
+    magnitude_user = 0
+    magnitude_loc = 0
+
+    for key in all_keys:
+        user = user_prefs.get(key, 0.0)
+        location = location_vector.get(key, 0.0)
+
+        dot_product += user * location
+        magnitude_user += user ** 2
+        magnitude_loc += location ** 2
+
+    magnitude_user = math.sqrt(magnitude_user)
+    magnitude_loc = math.sqrt(magnitude_loc)
+
+    if not magnitude_user or not magnitude_loc:
+        return 0.0
+
+    return dot_product / (magnitude_user * magnitude_loc)
+
 @recc_bp.route('/nearby', methods=['POST'])
 def get_nearby_recommendations():
     data = request.get_json() or {}
@@ -109,3 +134,30 @@ def test_location_vector():
 
     return jsonify({'location_vectors': vectors}), 200
 
+@recc_bp.route('/test/relevance', methods=['GET'])
+def test_relevance():
+    user_prefs = {
+        "food": 1.0, "activities": 0.8,
+        "outdoors": 0.5, "shopping": 0.2,
+        "arts_and_culture": 0.7, "museums": 0.6,
+        "nightlife": 0.4, "family_friendly": 0.9,
+        "proffesional_services": 0.1, "transportation_utilities": 0.0,
+        "lodging_residential": 0.3, "education": 0.2,
+        "business_industrial": 0.0, "religion_community": 0.5
+    }
+
+    data = fetch_tomtom_data(36.98844, -121.97483, 5, 100)
+
+    reccs = data.get('results', []) if isinstance(data, dict) else data
+
+    if not reccs:
+        return jsonify({'message': 'No results found', 'raw_data': data}), 200
+
+    relevances = []
+    for rec in reccs:
+        location_vector = get_location_vector(rec)
+        relevance_score = calculate_relevance(user_prefs, location_vector)
+        poi_name = rec.get("name", "Unknown POI")
+        relevances.append({'name': poi_name, 'relevance_score': relevance_score})
+
+    return jsonify({'relevance_scores': relevances}), 200
