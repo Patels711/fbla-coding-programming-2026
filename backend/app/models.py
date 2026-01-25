@@ -18,8 +18,13 @@ class User(db.Model, UserMixin):
     favorite_locations = db.relationship('Location', secondary=FavoriteLocation.__table__, back_populates='favorited_by', lazy=True)
 
     preferences = db.Column(db.JSON, default=lambda: {
-        "food": 0.0, "activities": 0.0, "outdoors": 0.0, "shopping": 0.0, "arts_and_culture": 0.0, "museums": 0.0,
-        "nightlife": 0.0, "family_friendly": 0.0
+        "food": 0.0, "activities": 0.0,
+        "outdoors": 0.0, "shopping": 0.0,
+        "arts_and_culture": 0.0, "museums": 0.0,
+        "nightlife": 0.0, "family_friendly": 0.0,
+        "proffesional_services": 0.0, "transportation_utilities": 0.0,
+        "lodging_residential": 0.0, "education": 0.0,
+        "business_industrial": 0.0, "religion_community": 0.0
     })
 
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
