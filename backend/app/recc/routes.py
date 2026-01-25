@@ -93,6 +93,36 @@ def calculate_relevance(user_prefs, location_vector):
 
     return dot_product / (magnitude_user * magnitude_loc)
 
+def rank_locations(user_profile, locations):
+    ranked_list = []
+
+    relevance_weight = 0.9
+    popularity_weight = 0.1
+    decay_constant = 1.0
+
+    user_vector = user_profile.preferences
+
+    for place in locations:
+        location_vector = get_location_vector(place)
+
+        relevance = calculate_relevance(user_vector, location_vector)
+        popularity = place.get('score', 1.0) / 100.0
+        distance = place.get('distance_meters', 0) / 1609.34
+        distance_factor = math.exp(-distance / (decay_constant)) * 10.0
+
+        final_score = ((relevance * relevance_weight) + (popularity * popularity_weight)) * distance_factor
+
+        ranked_list.append({
+            "name": place['name'],
+            "score": final_score,
+            "relevance": relevance,
+            "popularity": popularity,
+            "distance_factor": distance_factor,
+            "distance_mi": distance
+        })
+
+    return sorted(ranked_list, key=lambda x: x['score'], reverse=True)
+
 @recc_bp.route('/nearby', methods=['POST'])
 def get_nearby_recommendations():
     data = request.get_json() or {}
@@ -110,7 +140,7 @@ def get_nearby_recommendations():
 
 @recc_bp.route('/test/nearby', methods=['GET'])
 def test_recommendation():
-    reccs = fetch_tomtom_data(36.98844, -121.97483, 5, 10)
+    reccs = fetch_tomtom_data(36.98844, -121.97483, 5, 100)
 
     if reccs is None:
         return jsonify({'message': 'Test failed: API error'}), 500
@@ -161,3 +191,26 @@ def test_relevance():
         relevances.append({'name': poi_name, 'relevance_score': relevance_score})
 
     return jsonify({'relevance_scores': relevances}), 200
+
+@recc_bp.route('/test/rank_locations', methods=['GET'])
+def test_rank_locations():
+    user_prefs = {
+        "food": 1.0, "activities": 0.8,
+        "outdoors": 0.5, "shopping": 0.2,
+        "arts_and_culture": 0.7, "museums": 0.6,
+        "nightlife": 0.4, "family_friendly": 0.9,
+        "proffesional_services": 0.1, "transportation_utilities": 0.0,
+        "lodging_residential": 0.3, "education": 0.2,
+        "business_industrial": 0.0, "religion_community": 0.5
+    }
+
+    data = fetch_tomtom_data(36.98844, -121.97483, 5, 100)
+
+    reccs = data.get('results', []) if isinstance(data, dict) else data
+
+    if not reccs:
+        return jsonify({'message': 'No results found', 'raw_data': data}), 200
+
+    ranked_locations = rank_locations(user_prefs, reccs)
+
+    return jsonify({'ranked_locations': ranked_locations}), 200
