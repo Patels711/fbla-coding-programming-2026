@@ -12,7 +12,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app, supports_credentials=True)
     from app.models import User
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
+    app.config['SECRET_KEY'] = os.getenv('BACKEND_SECRET_KEY', 'default_secret_key')
     
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     instance_path = os.path.join(basedir, 'instance')
@@ -36,9 +36,11 @@ def create_app():
     from app.auth import auth_bp
     from app.rate import rate_bp 
     from app.loc import loc_bp 
+    from app.recc import recc_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(rate_bp, url_prefix='/rate')
     app.register_blueprint(loc_bp, url_prefix='/loc')
+    app.register_blueprint(recc_bp, url_prefix='/recc')
 
     Migrate(app, db)
 

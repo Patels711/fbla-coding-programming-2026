@@ -66,5 +66,6 @@ def profile():
     return jsonify({
         'uid': current_user.uid,
         'username': current_user.username,
-        'profile_picture': current_user.profile_picture
+        'profile_picture': current_user.profile_picture,
+        'preferences': current_user.preferences
     }), 200
