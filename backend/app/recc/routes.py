@@ -148,7 +148,12 @@ def update_preferences():
     if action not in multipliers:
         return jsonify({'message': 'Invalid action'}), 400
 
-    current_preferences = dict(current_user.preferences)
+    default_prefs = {
+        "food": 0.0, "activities": 0.0, "outdoors": 0.0, 
+        "shopping": 0.0, "arts_and_culture": 0.0, 
+        "museums": 0.0, "nightlife": 0.0, "family_friendly": 0.0
+    }
+    current_preferences = dict(current_user.preferences or default_prefs)
 
     for category, is_present in location_vector.items():
         if is_present > 0:
@@ -175,6 +180,24 @@ def get_nearby_recommendations():
         return jsonify({'message': 'Error fetching data from TomTom API'}), 500
 
     return jsonify({'recommendations': reccs, 'length': len(reccs)}), 200
+
+@recc_bp.route('/ranked', methods=['POST'])
+@login_required
+def get_ranked_recommendations():
+    data = request.get_json() or {}
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    radius = data.get('radius_mi', 5)
+    limit = data.get('limit', 100)
+
+    reccs = fetch_tomtom_data(latitude, longitude, radius, limit)
+
+    if reccs is None:
+        return jsonify({'message': 'Error fetching data from TomTom API'}), 500
+
+    ranked_locations = rank_locations(current_user, reccs)
+
+    return jsonify({'ranked_locations': ranked_locations}), 200
 
 @recc_bp.route('/test/nearby', methods=['GET'])
 def test_recommendation():
