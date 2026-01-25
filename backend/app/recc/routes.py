@@ -98,7 +98,7 @@ def rank_locations(user_profile, locations):
 
     relevance_weight = 0.9
     popularity_weight = 0.1
-    decay_constant = 1.0
+    decay_constant = 1.5
 
     user_vector = user_profile.preferences
 
@@ -122,6 +122,44 @@ def rank_locations(user_profile, locations):
         })
 
     return sorted(ranked_list, key=lambda x: x['score'], reverse=True)
+
+@recc_bp.route('/update_preferences', methods=['POST'])
+@login_required
+def update_preferences():
+    data = request.get_json()
+    action = data.get('action')
+    poi = data.get('poi')
+
+    location_vector = get_location_vector(poi)
+    learning_rate = 0.02
+
+    multipliers = {
+        'directions': 4.0,
+        'like': 2.0,
+        'click': 1.0,
+        'hover': 0.5, # 3 - 5 seconds
+        'pause': 0.2, # 1 - 3 seconds
+        'ignore': 0.0, # less than 1 second
+        'dislike': -1.5,
+        'remove': -5.0,
+    }
+
+    modifier = multipliers.get(action, 0.0)
+    if action not in multipliers:
+        return jsonify({'message': 'Invalid action'}), 400
+
+    current_preferences = dict(current_user.preferences)
+
+    for category, is_present in location_vector.items():
+        if is_present > 0:
+            adjustment = is_present * learning_rate * modifier
+
+            new_value = current_preferences.get(category, 0.0) + adjustment
+            current_preferences[category] = max(0.0, min(new_value, 1.0))
+
+    current_user.preferences = current_preferences
+    db.session.commit()
+    return jsonify({'message': 'Preferences updated successfully'}), 200
 
 @recc_bp.route('/nearby', methods=['POST'])
 def get_nearby_recommendations():
