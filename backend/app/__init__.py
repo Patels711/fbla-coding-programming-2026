@@ -36,9 +36,11 @@ def create_app():
     from app.auth import auth_bp
     from app.rate import rate_bp 
     from app.loc import loc_bp 
+    from app.recc import recc_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(rate_bp, url_prefix='/rate')
     app.register_blueprint(loc_bp, url_prefix='/loc')
+    app.register_blueprint(recc_bp, url_prefix='/recc')
 
     Migrate(app, db)
 
