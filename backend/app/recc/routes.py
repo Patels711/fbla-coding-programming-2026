@@ -2,8 +2,10 @@ from flask import request, jsonify, render_template, url_for, redirect
 from . import recc_bp
 from app.models import User, Review, Location
 from app import db
+from app.recc.categories import CATEGORY_MAPPING
 import requests
 import os
+import unicodedata
 
 tomtom_api_key = os.getenv('TOMTOM_API_KEY')
 
@@ -27,9 +29,44 @@ def fetch_tomtom_data(latitude, longitude, radius_mi=5, limit=100):
             'longitude': position.get('lon'),
             'distance_meters': result.get('dist'),
             'category': poi.get('categories', []),
-            'score': result.get('score')
+            'score': result.get('score'),
+            'classifications': poi.get('classifications', [])
         })
     return recommendations
+
+def get_location_vector(tomtom_poi):
+    vector = {
+        "food": 0.0, "activities": 0.0,
+        "outdoors": 0.0, "shopping": 0.0,
+        "arts_and_culture": 0.0, "museums": 0.0,
+        "nightlife": 0.0, "family_friendly": 0.0,
+        "proffesional_services": 0.0, "transportation_utilities": 0.0,
+        "lodging_residential": 0.0, "education": 0.0,
+        "business_industrial": 0.0, "religion_community": 0.0
+    }
+
+    classifications = tomtom_poi.get("classifications", [])
+
+    for item in classifications:
+        names = item.get('names', [])
+        for name_obj in names:
+            raw_name = name_obj.get('name', '').strip().upper()
+
+            if raw_name in CATEGORY_MAPPING:
+                mapped_val = CATEGORY_MAPPING[raw_name]
+
+                if isinstance(mapped_val, list):
+                    for cat in mapped_val:
+                        if cat in vector:
+                            vector[cat] = 1.0
+                else:
+                    if mapped_val in vector:
+                        vector[mapped_val] = 1.0
+            else:
+                print(f"Missed: {raw_name}")
+                pass
+
+    return vector
 
 @recc_bp.route('/nearby', methods=['POST'])
 def get_nearby_recommendations():
@@ -46,7 +83,7 @@ def get_nearby_recommendations():
 
     return jsonify({'recommendations': reccs, 'length': len(reccs)}), 200
 
-@recc_bp.route('/test', methods=['GET'])
+@recc_bp.route('/test/nearby', methods=['GET'])
 def test_recommendation():
     reccs = fetch_tomtom_data(36.98844, -121.97483, 5, 10)
 
@@ -54,3 +91,21 @@ def test_recommendation():
         return jsonify({'message': 'Test failed: API error'}), 500
 
     return jsonify({'recommendations': reccs, 'length': len(reccs)}), 200
+
+@recc_bp.route('/test/location_vector', methods=['GET'])
+def test_location_vector():
+    data = fetch_tomtom_data(36.98844, -121.97483, 5, 100)
+    
+    reccs = data.get('results', []) if isinstance(data, dict) else data
+
+    if not reccs:
+        return jsonify({'message': 'No results found', 'raw_data': data}), 200
+
+    vectors = []
+    for rec in reccs:
+        vector = get_location_vector(rec)
+        poi_name = rec.get("name", "Unknown POI")
+        vectors.append({'name': poi_name, 'vector': vector})
+
+    return jsonify({'location_vectors': vectors}), 200
+
