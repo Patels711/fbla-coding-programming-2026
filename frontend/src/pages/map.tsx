@@ -143,7 +143,6 @@ const Map = () => {
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isPoiDropdownOpen, setIsPoiDropdownOpen] = useState(false);
-  const navigate = useNavigate();
 
   const getMapStyle = () => {
     switch (mapStyle) {
@@ -742,7 +741,7 @@ const Map = () => {
 
   return (
     <div className="fixed inset-0 bg-neutral-900">
-        <div ref={mapElement} className="w-full h-full relative [&_.tt-attribution]:hidden te">
+        <div ref={mapElement} className="w-full h-full relative [&_.tt-attribution]:hidden">
           
           {/*hiding sidebar*/}
           <Navbar page={`Map`}>
@@ -947,7 +946,7 @@ const Map = () => {
           )}
 
           {/* Side Bar */}
-          <div className={`absolute translate-y-85 items-center left-4 flex flex-col gap-3 z-[1000] text-[14px]`}>
+          <div className={`absolute translate-y-92 items-center left-4 flex flex-col gap-3 z-[1000] text-[14px]`}>
             <button 
               onClick={() => {
                 if (!mapRef.current) return;
