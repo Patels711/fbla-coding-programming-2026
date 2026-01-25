@@ -12,7 +12,8 @@ def create_app():
     app = Flask(__name__)
     CORS(app, supports_credentials=True)
     from app.models import User
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
+    app.config['SECRET_KEY'] = os.getenv('BACKEND_SECRET_KEY', 'default_secret_key')
+    print(app.secret_key)
     
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     instance_path = os.path.join(basedir, 'instance')
