@@ -1,5 +1,6 @@
 from app.extensions import db
 from flask_login import UserMixin
+from datetime import datetime
 
 class FavoriteLocation(db.Model):
     __tablename__ = 'favorite_location'
@@ -15,6 +16,21 @@ class User(db.Model, UserMixin):
 
     reviews = db.relationship('Review', back_populates='user', lazy=True)
     favorite_locations = db.relationship('Location', secondary=FavoriteLocation.__table__, back_populates='favorited_by', lazy=True)
+
+    preferences = db.Column(db.JSON, default=lambda: {
+        "food": 0.0, "activities": 0.0, "outdoors": 0.0, "shopping": 0.0, "arts_and_culture": 0.0, "museums": 0.0,
+        "nightlife": 0.0, "family_friendly": 0.0
+    })
+
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def update_preferences(self, category, weight=0.1):
+        current_preferences = self.preferences
+        current_val = current_preferences.get(category, 0.0)
+        current_preferences[category] = min(current_val + weight, 1.0)
+        self.preferences = current_preferences
+        self.last_updated = datetime.utcnow()
+        db.session.commit()
 
     def get_id(self):
         return str(self.uid)
