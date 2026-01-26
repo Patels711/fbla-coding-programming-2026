@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Links from '../components/links';
 import Navbar from '../components/navbar';
+import Card from '../components/card';
+
 
 const Home = () => {
 	return (
@@ -26,9 +28,9 @@ const Home = () => {
 			</Navbar>
 
 			<div className="relative z-10 flex flex-col items-center gap-8 pt-32 pb-20">
-				<div className="bg-neutral-800/60 p-16 rounded-3xl w-full max-w-2xl border border-white/5 backdrop-blur-sm">
-					<h1 className="text-neutral-500 text-4xl">Content 01</h1>
-				</div>
+				<Card contentClassName="text-4xl text-neutral-500" className="max-w-3xl">
+					Content 01
+				</Card>
 				<div className="bg-neutral-800/60 p-16 rounded-3xl w-full max-w-2xl border border-white/5 backdrop-blur-sm">
 					<h1 className="text-neutral-500 text-4xl">Content 02</h1>
 				</div>
