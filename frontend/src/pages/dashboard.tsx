@@ -7,7 +7,7 @@ import Links from '../components/links';
 import {MapPin} from 'lucide-react';
 
 const Dashboard=()=>{
-    const [user, setUser] = useState<{image: string, username: string} | null>(null);
+    const [user, setUser] = useState<{uid: string, username: string} | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -68,7 +68,7 @@ const Dashboard=()=>{
                     <h1 className="text-gray-400 text-2xl">Your account infomation is below:</h1>
                     <div className="grid gap-2 grid-cols-2 mt-8 max:[gap-y-1">
                     <p className="text-gray-400 text-lg">Username: {user.username}</p>
-                    <p className="text-gray-400 text-lg">Email: {user.email}</p>
+                    <p className="text-gray-400 text-lg">Email: {user.uid}</p>
                     </div>
                 </Card>
             </div>
