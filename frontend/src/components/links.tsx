@@ -8,12 +8,13 @@ interface LinkProps {
     className?: string;
     linkClassName?: string;
     titleClassName?: string;
+    onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
-const Links: React.FC<LinkProps> = ({ title, children, link = "", className = "", linkClassName = "", titleClassName = ""}) => {
+const Links: React.FC<LinkProps> = ({ title, children, link = "", className = "", linkClassName = "", titleClassName = "", onClick}) => {
     return (
         <div className={`relative z-10 flex justify-center ${className}`}>
-            <Link to={link.startsWith('/') ? link : `/${link}`} className={`${linkClassName} flex items-center gap-2 pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.1] text-md`}>
+            <Link to={link.startsWith('/') ? link : `/${link}`} onClick={onClick} className={`${linkClassName} flex items-center gap-2 pointer-events-auto px-3 py-1 rounded-full bg-blue-400 text-orange-50 shadow-lg hover:bg-sky-400 transition-all duration-200 lg:hover:scale-[1.06] text-md`}>
                         {title ? (
                             typeof title === 'string' ? (
                             <h1 className={`text-xl md:text-xl font-bold text-[#406386] ${titleClassName}`}>

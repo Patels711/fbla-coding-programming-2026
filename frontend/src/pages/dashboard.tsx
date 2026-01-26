@@ -4,9 +4,10 @@ import Card from "../components/card";
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Links from '../components/links';
+import {MapPin} from 'lucide-react';
 
 const Dashboard=()=>{
-    const [user, setUser] = useState<{uid: number, username: string} | null>(null);
+    const [user, setUser] = useState<{image: string, username: string} | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,6 +30,19 @@ const Dashboard=()=>{
         fetchProfile();
     }, [navigate]);
 
+    const handleLogout = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        try {
+            await fetch('http://localhost:5174/auth/logout', {
+                credentials: 'include'
+            });
+            navigate('/');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            navigate('/');
+        }
+    };
+
     if (!user) return <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">Loading...</div>;
 
     return(
@@ -43,15 +57,18 @@ const Dashboard=()=>{
             </div>
             <Navbar page="Profile">
                 <Links link="map">
-                    Map 🗺️ →
+                    Map <MapPin size={22}/>
                 </Links>
+                <Links link="/" onClick={handleLogout}>
+                    Logout →
+                </Links> 
             </Navbar>
             <div className="w-full relative grid gap-8 pt-28">
                 <Card title={`Welcome ${user.username}`} titleClassName=' text-cyan-500'>
                     <h1 className="text-gray-400 text-2xl">Your account infomation is below:</h1>
                     <div className="grid gap-2 grid-cols-2 mt-8 max:[gap-y-1">
                     <p className="text-gray-400 text-lg">Username: {user.username}</p>
-                    <p className="text-gray-400 text-lg">Username: {user.username}</p>
+                    <p className="text-gray-400 text-lg">Email: {user.email}</p>
                     </div>
                 </Card>
             </div>

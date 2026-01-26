@@ -143,6 +143,27 @@ const Map = () => {
   const [mapPerspective, setMapPerspective] = useState<'2d' | '3d'>('2d');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isPoiDropdownOpen, setIsPoiDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('http://localhost:5174/auth/dashboard', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        } else {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        navigate('/login');
+      }
+    };
+    fetchProfile();
+  }, [navigate]);
 
   const getMapStyle = () => {
     switch (mapStyle) {
@@ -239,7 +260,7 @@ const Map = () => {
         mapRef.current = null;
       }
     };
-  }, []);
+  }, [user]);
 
   const drawUserMarker = (loc: {lat: number, lng: number}) => {
     if (!mapRef.current || !mapLoaded) return;
@@ -738,6 +759,8 @@ const Map = () => {
     if (meters < 1000) return `${Math.round(meters)}m`;
     return `${(meters / 1609.34).toFixed(1)}mi`;
   };
+
+  if (!user) return <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="fixed inset-0 bg-neutral-900">
