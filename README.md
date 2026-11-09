@@ -2,7 +2,7 @@
 
 Made by **Sahya Patel**, **Nathaniel George**, and **Eli Nahoum**.
 
-LuminX is a local-business discovery project. This repository contains Sahya Patel's project copy: a React/TypeScript web prototype with account screens and a TomTom-powered map, plus a Flask backend for authentication, location records, reviews, and recommendation endpoints. The more feature-complete team companion copy is maintained by Eli Nahoum (`abominablepug`) and is linked below.
+LuminX is a local-business discovery project. This repository contains Sahya Patel's project copy: a React/TypeScript web prototype with account screens and a TomTom-powered map, plus a Flask backend for authentication, location records, reviews, and recommendation endpoints. The more current team project copy for FBLA Nationals is maintained by Eli Nahoum (`abominablepug`) and is linked below.
 
 ## What is in this repository
 
