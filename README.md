@@ -1,48 +1,106 @@
-# LuminX — Local Business Discovery Platform
+# LuminX — FBLA Coding and Programming 2026
 
-Made by **Sahya Patel**, **Nathaniel George**, and **Eli Nahoum** for FBLA Coding and Programming 2026.
+Made by **Sahya Patel**, **Nathaniel George**, and **Eli Nahoum**.
 
-LuminX helps people discover local businesses through personalized recommendations, interactive maps, reviews, and local offers.
+LuminX is a local-business discovery project. This repository contains Sahya Patel's project copy: a React/TypeScript web prototype with account screens and a TomTom-powered map, plus a Flask backend for authentication, location records, reviews, and recommendation endpoints. The more feature-complete team companion copy is maintained by Eli Nahoum (`abominablepug`) and is linked below.
 
-## Features
+## What is in this repository
 
-- Swipe through local places with personalized recommendations.
-- Explore points of interest and plan routes on interactive maps.
-- Ask the AI assistant for nearby recommendations and itinerary ideas.
-- Save favorite and recently visited places.
-- Read and submit business reviews.
-- Find, save, and navigate to local coupons and deals.
-- Create an account and manage a personal profile.
+- Frontend routes for the landing page, login, registration, map, loading, and dashboard screens.
+- A map interface that searches and displays nearby points of interest using TomTom.
+- Flask endpoints and SQLAlchemy models for users, locations, reviews, and preference-based recommendations.
+- SQLite persistence for the backend.
 
-## Project links
+This copy is an earlier prototype. Features such as the full business portal, jobs, coupons, events, and the expanded AI assistant described in the companion repository are not all present in this repository's current source tree. See the companion link for that fuller implementation.
 
-This is Sahya Patel's repository for the FBLA project. The team's companion repository, maintained by Eli Nahoum (`abominablepug`), is [here](https://github.com/abominablepug/fbla-coding-programming-2026). The companion repository links back to this one so both team copies are easy to find.
+## Team project links
+
+- **Sahya Patel:** [Patels711/fbla-coding-programming-2026](https://github.com/Patels711/fbla-coding-programming-2026) — this repository.
+- **Eli Nahoum (`abominablepug`):** [abominablepug/fbla-coding-programming-2026](https://github.com/abominablepug/fbla-coding-programming-2026) — companion project copy. Its README links back here.
 
 ## Technology
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, Framer Motion
-- Backend: Python, Flask, SQLAlchemy, Flask-Login, SQLite
-- Integrations: TomTom maps and places, Google Gemini recommendations
+| Area | Tools |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite (`rolldown-vite`), React Router, Tailwind CSS 4, Framer Motion |
+| Maps and places | TomTom Maps and Services SDK |
+| Backend | Python 3.13+, Flask, Flask-Login, Flask-SQLAlchemy, Flask-Migrate, SQLite |
+| Python packages | Poetry |
 
 ## Requirements
 
-- Node.js and npm
-- Python 3.13 or newer
-- Poetry
-- API credentials for the integrations enabled in your environment
+- Node.js and npm.
+- Python 3.13 or newer and Poetry.
+- A TomTom developer key for map tiles and nearby place search.
 
-## Setup and development
+## Configuration
 
-From the repository root, install dependencies and initialize the database:
-
-```bash
-npm run setup
-```
-
-Add the required API keys and application settings to `backend/.env` using the checked-in environment example as a guide. Do not commit secrets. Start the backend and frontend together with:
+Copy the root example and set a strong local Flask secret and TomTom key:
 
 ```bash
-npm run dev
+cp .env.example .env
 ```
 
-The frontend and backend have their own package/configuration files under `frontend/` and `backend/` for separate setup or development.
+Set `BACKEND_SECRET_KEY` and `TOMTOM_API_KEY` in the root `.env`. For the current frontend map, create `frontend/.env.local` with:
+
+```env
+VITE_TOMTOM_API_KEY=your_tomtom_api_key
+```
+
+The frontend's map code calls the backend at `http://localhost:5174`. `backend/run.py` defaults to port `5174`; the checked-in root example currently lists a different `BACKEND_PORT`, so set `BACKEND_PORT=5174` in `.env` for the frontend's current default. Vite serves the frontend on its default development port `5173`; `FRONTEND_PORT` in the example is not read by the current Vite config. Do not commit `.env` files or API keys.
+
+## Install and run
+
+Install root Node dependencies, backend Python dependencies, and frontend dependencies:
+
+```bash
+npm install
+cd backend && poetry install
+cd ../frontend && npm install
+cd ..
+```
+
+Start the backend and frontend in separate terminals from the repository root:
+
+```bash
+cd backend && poetry run python run.py
+```
+
+```bash
+cd frontend && npm run dev
+```
+
+Open the URL printed by Vite, normally `http://localhost:5173`. The backend's default URL is `http://localhost:5174`.
+
+The root `npm run setup` and `npm run dev` scripts are convenience scripts, but the setup script does not install Poetry dependencies itself. Run `poetry install` first as shown above. For the frontend production build, use `cd frontend && npm run build`.
+
+## Project layout
+
+```text
+.env.example                         Example backend variables and local ports
+package.json                         Root setup, migration, and combined development scripts
+backend/run.py                       Flask development server entry point
+backend/app/__init__.py              Flask app factory, SQLite setup, blueprint registration
+backend/app/models.py                User, location, review, and favorites models
+backend/app/auth/                    Registration, login, logout, profile endpoints
+backend/app/loc/                     Location record endpoints
+backend/app/rate/                    Ratings and reviews endpoints
+backend/app/recc/                    TomTom search and preference ranking logic
+backend/pyproject.toml                Python version and Poetry dependencies
+frontend/src/App.tsx                 Frontend route table
+frontend/src/pages/                  Landing, login, register, map, loading, dashboard
+frontend/src/components/             Shared UI components
+frontend/package.json                Frontend dependencies and Vite scripts
+```
+
+## Main backend routes
+
+The Flask app registers the `/auth`, `/loc`, `/rate`, and `/recc` blueprints. Routes include authentication and dashboard actions (`/auth/register`, `/auth/login`, `/auth/logout`, `/auth/dashboard`), location listing and lookup (`/loc/all`, `/loc/<id>`), reviews (`/rate/loc/<id>/reviews`, `/rate/review`), and nearby or ranked recommendations (`/recc/nearby`, `/recc/ranked`). See the route modules for request and response fields.
+
+## Sources
+
+- [TomTom Maps SDK for Web](https://developer.tomtom.com/maps-sdk-web-js)
+- [TomTom Search API](https://developer.tomtom.com/search-api/documentation/search-service/nearby-search)
+- [Flask documentation](https://flask.palletsprojects.com/)
+- [SQLAlchemy documentation](https://docs.sqlalchemy.org/)
+- [Vite documentation](https://vite.dev/guide/)
